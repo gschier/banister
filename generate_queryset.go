@@ -129,13 +129,9 @@ func (g *QuerysetGenerator) AddFilterOptionsStruct() {
 		values[jen.Id(fieldName)] = jen.Op("&").Id(fieldType).Values()
 	}
 
-	// Define struct
-	g.File.Type().Id(g.names().QuerysetFilterOptionsStruct).Struct(fields...)
-
-	// Create instance of struct
-	varName := g.names().QuerysetFilterOptionsStruct
-	g.File.Var().Id(g.names().FilterOptionsVar).Op("=").
-		Op("&").Id(varName).Values(values)
+	// Define options struct and instantiate an instance inline, so we
+	// don't clutter the scope with unnecessary types.
+	g.File.Var().Id(g.names().FilterOptionsVar).Op("=").Struct(fields...).Values(values)
 }
 
 func (g *QuerysetGenerator) Generate() {

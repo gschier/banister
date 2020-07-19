@@ -25,7 +25,7 @@ type UserQueryset struct {
 	offset  uint64
 }
 
-func newUserQueryset() *UserQueryset {
+func NewUserQueryset() *UserQueryset {
 	return &UserQueryset{
 		filter:  make([]userQuerysetFilterArg, 0),
 		limit:   0,
@@ -63,20 +63,19 @@ type userQuerysetSetterArg struct {
 	field string
 	value interface{}
 }
-type UserQuerysetFilterOptions struct {
-	ID       userIDFilter
-	Age      userAgeFilter
-	Name     userNameFilter
-	Username userUsernameFilter
-	Created  userCreatedFilter
-}
 
-var WhereUser = &UserQuerysetFilterOptions{
-	Age:      &userAgeFilter{},
-	Created:  &userCreatedFilter{},
-	ID:       &userIDFilter{},
-	Name:     &userNameFilter{},
-	Username: &userUsernameFilter{},
+var WhereUser = struct {
+	ID       UserIDFilter
+	Age      UserAgeFilter
+	Name     UserNameFilter
+	Username UserUsernameFilter
+	Created  UserCreatedFilter
+}{
+	Age:      &UserAgeFilter{},
+	Created:  &UserCreatedFilter{},
+	ID:       &UserIDFilter{},
+	Name:     &UserNameFilter{},
+	Username: &UserUsernameFilter{},
 }
 `), strings.TrimSpace(file.GoString()))
 }
