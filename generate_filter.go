@@ -3,57 +3,104 @@ package banister
 import (
 	"fmt"
 	"github.com/dave/jennifer/jen"
+	"strings"
 )
 
 type FilterGenerator struct {
+	Model Model
 	Field Field
 	File  *jen.File
 }
 
-func NewFilterGenerator(file *jen.File, field Field) *FilterGenerator {
-	return &FilterGenerator{Field: field, File: file}
+func NewFilterGenerator(file *jen.File, field Field, model Model) *FilterGenerator {
+	return &FilterGenerator{Field: field, File: file, Model: model}
 }
 
-func (g *FilterGenerator) StructName() string {
-	return g.Field.Settings().Name + "Filter"
+func (g *FilterGenerator) names() GeneratedFieldNames {
+	return g.Field.Settings().Names(g.Model.Settings().Name)
 }
 
-func (g *FilterGenerator) GoType() string {
+func (g *FilterGenerator) modelNames() GeneratedModelNames {
+	return g.Model.Settings().Names()
+}
+
+func (g *FilterGenerator) goType() string {
 	return fmt.Sprintf("%T", g.Field.EmptyDefault())
 }
 
-func (g *FilterGenerator) AddFilterMethod(name, sqlizerName string, args *jen.Statement, lit *jen.Statement) {
-	g.File.Comment(name + " does a thing")
+func (g *FilterGenerator) AddFilterMethod(name string, args *jen.Statement, filter *jen.Statement) {
 	g.File.Func().Params(
-		jen.Id("filter").Op("*").Id(g.StructName()),
+		jen.Id("filter").Op("*").Id(g.names().FilterOptionStruct),
 	).Id(name).Params(
 		args,
-	).Params(jen.Op("*").Id(g.StructName())).Block(
-		jen.Id("filter").Dot("filters").Op("=").Id("append").Params(
-			jen.Id("filter"),
-			jen.Op("&").Qual("github.com/Masterminds/squirrel", sqlizerName).Values(
-				jen.Dict{jen.Lit(g.Field.Settings().DBColumn): lit},
-			),
+	).Params(jen.Id(g.modelNames().QuerysetFilterArgStruct)).Block(
+		jen.Return(
+			jen.Id(g.modelNames().QuerysetFilterArgStruct).Values(jen.Dict{
+				jen.Id("filter"): filter,
+			}),
 		),
-		jen.Return(jen.Id("filter")),
 	)
 }
 
 func (g *FilterGenerator) AddStructDef() {
-	g.File.Type().Id(g.StructName()).Struct(
+	g.File.Type().Id(g.names().FilterOptionStruct).Struct(
 		jen.Id("filters").Index().Qual("github.com/Masterminds/squirrel", "Sqlizer"),
+	)
+}
+
+func (g *FilterGenerator) SqExpr(op Operation) *jen.Statement {
+	switch op {
+	case Exact:
+
+	}
+
+	return jen.Qual("github.com/Masterminds/squirrel", "Expr").Call()
+}
+
+func (g *FilterGenerator) TableDotColumn() string {
+	return fmt.Sprintf(
+		`"%s"."%s"`,
+		strings.ReplaceAll(g.Model.Settings().DBTable, `"`, `\"`),
+		strings.ReplaceAll(g.Field.Settings().DBColumn, `"`, `\"`),
+	)
+}
+
+func (g *FilterGenerator) AddSimpleSquirrelFilter(name, sqName string) {
+	g.AddFilterMethod(name,
+		jen.Id("v").Id(g.goType()),
+		jen.Op("&").Qual("github.com/Masterminds/squirrel", sqName).Values(jen.Dict{
+			jen.Lit(g.TableDotColumn()): jen.Id("v"),
+		}),
 	)
 }
 
 func (g *FilterGenerator) Generate() {
 	g.AddStructDef()
-	g.AddFilterMethod("Eq", "Eq", jen.Id("v").String(), jen.Lit("v"))
-	g.AddFilterMethod("Gt", "Gt", jen.Id("v").String(), jen.Lit("v"))
-	g.AddFilterMethod("Gte", "GtOrEq", jen.Id("v").String(), jen.Lit("v"))
-	g.AddFilterMethod("Lt", "Lt", jen.Id("v").String(), jen.Lit("v"))
-	g.AddFilterMethod("Lte", "LtOrEq", jen.Id("v").String(), jen.Lit("v"))
+	for _, op := range g.Field.Operations() {
+		switch op {
+		case Exact:
+			g.AddSimpleSquirrelFilter("Eq", "Eq")
+		case Gt:
+			g.AddSimpleSquirrelFilter("Gt", "Gt")
+		case Gte:
+			g.AddSimpleSquirrelFilter("Gte", "GtOrEq")
+		case Lt:
+			g.AddSimpleSquirrelFilter("Lt", "Lt")
+		case Lte:
+			g.AddSimpleSquirrelFilter("Lte", "LtOrEq")
+		case Contains:
+			g.AddSimpleSquirrelFilter("Contains", "Like")
+		case IContains:
+			g.AddSimpleSquirrelFilter("IContains", "ILike")
+		}
+	}
 
 	if g.Field.Settings().Null {
-		g.AddFilterMethod("Null", "Eq", nil, jen.Nil())
+		g.AddFilterMethod("Null",
+			nil,
+			jen.Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(jen.Dict{
+				jen.Lit(g.TableDotColumn()): jen.Nil(),
+			}),
+		)
 	}
 }

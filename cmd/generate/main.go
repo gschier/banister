@@ -7,8 +7,9 @@ import (
 
 func main() {
 	config := &banister.GenerateConfig{
-		OutputDir: "./generate",
+		OutputDir:   "./generate",
 		PackageName: "generate",
+		MultiFile:   true,
 		Models: []banister.Model{
 			testutil.TestUserModel(),
 			testutil.TestPostModel(),
@@ -20,4 +21,3 @@ func main() {
 		panic(err)
 	}
 }
-

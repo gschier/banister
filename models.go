@@ -8,6 +8,10 @@ type ModelSettings struct {
 	DBTable     string
 }
 
+func (s ModelSettings) Names() GeneratedModelNames {
+	return NamesForModel(s.Name)
+}
+
 func (s *ModelSettings) Fix() {
 	// Generate table name if it doesn't exist
 	if s.DBTable == "" && strings.HasSuffix(s.Name, "s") {

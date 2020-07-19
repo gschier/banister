@@ -30,6 +30,22 @@ func (s *FieldSettings) Fix() {
 	}
 }
 
+func (s FieldSettings) Names(modelName string) GeneratedFieldNames {
+	return NamesForField(modelName, s.Name)
+}
+
+func (s FieldSettings) GenFilterStructName(modelName string) string {
+	return PrivateGoName(modelName + s.Name + "Filter")
+}
+
+func (s FieldSettings) GenOrderStructName(modelName string) string {
+	return PrivateGoName(modelName + s.Name + "OrderBy")
+}
+
+func (s FieldSettings) GenSetStructName(modelName string) string {
+	return PrivateGoName(modelName + s.Name + "Set")
+}
+
 type DefaultValue struct {
 	Value interface{}
 	valid bool
@@ -93,4 +109,5 @@ type Field interface {
 	RelType() FieldType
 	Settings() FieldSettings
 	EmptyDefault() interface{}
+	Operations() []Operation
 }

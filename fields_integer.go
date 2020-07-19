@@ -26,11 +26,11 @@ func (f IntegerField) RelType() FieldType {
 }
 
 func (f IntegerField) EmptyDefault() interface{} {
-	v := int64(0)
-	if f.settings.Null {
-		return &v
-	}
-	return v
+	return int64(0)
+}
+
+func (f IntegerField) Operations() []Operation {
+	return []Operation{Exact, Lt, Lte, Gt, Gte}
 }
 
 // IntegerFieldBuilder

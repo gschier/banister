@@ -25,6 +25,10 @@ func (f AutoField) EmptyDefault() interface{} {
 	return int64(0)
 }
 
+func (f AutoField) Operations() []Operation {
+	return []Operation{Exact, Lt, Lte, Gt, Gte}
+}
+
 func (f AutoField) Settings() FieldSettings {
 	f.settings.Fix()
 	return *f.settings

@@ -3,6 +3,7 @@ package banister_test
 import (
 	"github.com/dave/jennifer/jen"
 	. "github.com/gschier/banister"
+	. "github.com/gschier/banister/testutil"
 	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
@@ -10,50 +11,34 @@ import (
 
 func TestFilterGenerator_GoSource(t *testing.T) {
 	file := jen.NewFile("dummy")
-	NewFilterGenerator(file, NewIntegerField("age").Null().Build()).Generate()
+	m := TestUserModel()
+	NewFilterGenerator(file, m.Fields()[1], m).Generate()
 	assert.Equal(t, strings.TrimSpace(`
 package dummy
 
 import squirrel "github.com/Masterminds/squirrel"
 
-type AgeFilter struct {
+type UserAgeFilter struct {
 	filters []squirrel.Sqlizer
 }
 
-// Eq does a thing
-func (filter *AgeFilter) Eq(v string) *AgeFilter {
-	filter.filters = append(filter, &squirrel.Eq{"age": "v"})
-	return filter
+func (filter *UserAgeFilter) Eq(v int64) userQuerysetFilterArg {
+	return userQuerysetFilterArg{filter: &squirrel.Eq{"\"users\".\"age\"": v}}
 }
-
-// Gt does a thing
-func (filter *AgeFilter) Gt(v string) *AgeFilter {
-	filter.filters = append(filter, &squirrel.Gt{"age": "v"})
-	return filter
+func (filter *UserAgeFilter) Lt(v int64) userQuerysetFilterArg {
+	return userQuerysetFilterArg{filter: &squirrel.Lt{"\"users\".\"age\"": v}}
 }
-
-// Gte does a thing
-func (filter *AgeFilter) Gte(v string) *AgeFilter {
-	filter.filters = append(filter, &squirrel.GtOrEq{"age": "v"})
-	return filter
+func (filter *UserAgeFilter) Lte(v int64) userQuerysetFilterArg {
+	return userQuerysetFilterArg{filter: &squirrel.LtOrEq{"\"users\".\"age\"": v}}
 }
-
-// Lt does a thing
-func (filter *AgeFilter) Lt(v string) *AgeFilter {
-	filter.filters = append(filter, &squirrel.Lt{"age": "v"})
-	return filter
+func (filter *UserAgeFilter) Gt(v int64) userQuerysetFilterArg {
+	return userQuerysetFilterArg{filter: &squirrel.Gt{"\"users\".\"age\"": v}}
 }
-
-// Lte does a thing
-func (filter *AgeFilter) Lte(v string) *AgeFilter {
-	filter.filters = append(filter, &squirrel.LtOrEq{"age": "v"})
-	return filter
+func (filter *UserAgeFilter) Gte(v int64) userQuerysetFilterArg {
+	return userQuerysetFilterArg{filter: &squirrel.GtOrEq{"\"users\".\"age\"": v}}
 }
-
-// Null does a thing
-func (filter *AgeFilter) Null() *AgeFilter {
-	filter.filters = append(filter, &squirrel.Eq{"age": nil})
-	return filter
+func (filter *UserAgeFilter) Null() userQuerysetFilterArg {
+	return userQuerysetFilterArg{filter: &squirrel.Eq{"\"users\".\"age\"": nil}}
 }
 `), strings.TrimSpace(file.GoString()))
 }

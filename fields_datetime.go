@@ -31,6 +31,10 @@ func (f DateTimeField) EmptyDefault() interface{} {
 	return time.Time{}
 }
 
+func (f DateTimeField) Operations() []Operation {
+	return []Operation{Exact, Gt, Gte, Lt, Lte}
+}
+
 // DateTimeFieldBuilder
 type DateTimeFieldBuilder struct {
 	field *DateTimeField

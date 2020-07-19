@@ -29,6 +29,25 @@ func (f TextField) EmptyDefault() interface{} {
 	return ""
 }
 
+func (f TextField) Operations() []Operation {
+	return []Operation{
+		Exact,
+		IExact,
+		Contains,
+		IContains,
+		Regex,
+		IRegex,
+		Gt,
+		Gte,
+		Lt,
+		Lte,
+		StartsWith,
+		EndsWith,
+		IStartsWith,
+		IEndsWith,
+	}
+}
+
 // TextFieldBuilder
 type TextFieldBuilder struct {
 	field *TextField

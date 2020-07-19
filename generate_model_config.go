@@ -14,20 +14,16 @@ func NewModelConfigGenerator(file *jen.File, model Model) *ModelConfigGenerator 
 	return &ModelConfigGenerator{Model: model, File: file}
 }
 
-func (g *ModelConfigGenerator) StructName() string {
-	return g.Model.Settings().Name + "Config"
-}
-
 func (g *ModelConfigGenerator) AddHookField(name, timing, op string) *jen.Statement {
-	comment := fmt.Sprintf("// %s sets a hook for the model that will \n" +
+	comment := fmt.Sprintf("// %s sets a hook for the model that will \n"+
 		"// be called %s the model is %s into the database.", name, timing, op)
 	return jen.Comment(comment).Line().Id(name).Func().Params(
-		jen.Id("m").Op("*").Id(g.Model.Settings().Name),
+		jen.Id("m").Op("*").Id(g.Model.Settings().Names().ModelStruct),
 	)
 }
 
 func (g *ModelConfigGenerator) Generate() {
-	g.File.Type().Id(g.StructName()).Struct(
+	g.File.Type().Id(g.Model.Settings().Names().ConfigStruct).Struct(
 		g.AddHookField("HookPreInsert", "before", "inserted").Line(),
 		g.AddHookField("HookPostInsert", "after", "inserted").Line(),
 		g.AddHookField("HookPreUpdate", "before", "updated").Line(),
