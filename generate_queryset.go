@@ -221,21 +221,10 @@ func (g *QuerysetGenerator) AddScanMethod() {
 }
 
 func (g *QuerysetGenerator) AddToSQLMethod() {
-	genSQL := Id("query").Op(",").Id("args").Op(",").Err().Op(":=").
-		Id("q").Dot("ToSql").Call()
-
-	maybePanic := If(
-		Err().Op("!=").Nil(),
-	).Block(
-		Panic(Err()),
-	)
-
 	g.AddMethod("toSQL",
 		[]Code{Id("q").Qual("github.com/Masterminds/squirrel", "Sqlizer")},
 		[]Code{
-			genSQL,
-			maybePanic,
-			Return(Id("query"), Id("args")),
+			Return(Id("qs").Dot("mgr").Dot("toSQL").Call(Id("q"))),
 		},
 		[]Code{
 			String(),

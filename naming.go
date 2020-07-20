@@ -41,10 +41,24 @@ var globalNames = struct {
 	StoreStruct       string
 	StoreConfigStruct string
 	StoreConstructor  string
+
+	HookPostInsert string
+	HookPreInsert  string
+	HookPostUpdate string
+	HookPreUpdate  string
+	HookPostDelete string
+	HookPreDelete  string
 }{
 	StoreStruct:       PublicGoName("Store"),
 	StoreConfigStruct: PublicGoName("StoreConfig"),
 	StoreConstructor:  PublicGoName("NewStore"),
+
+	HookPostInsert: "HookPostInsert",
+	HookPreInsert:  "HookPreInsert",
+	HookPostUpdate: "HookPostUpdate",
+	HookPreUpdate:  "HookPreUpdate",
+	HookPostDelete: "HookPostDelete",
+	HookPreDelete:  "HookPreDelete",
 }
 
 func NamesForModel(modelName string) GeneratedModelNames {
