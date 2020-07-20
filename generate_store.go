@@ -41,7 +41,7 @@ func (g *StoreGenerator) AddConstructor() {
 		values[Id(names.ManagerAccessor)] = Id(names.ManagerConstructor).Call(
 			Id("db"),
 			Id("c"),
-			Id(names.ConfigStruct).Values(),
+			Id("c").Dot(names.ConfigStruct),
 		)
 	}
 
@@ -56,7 +56,7 @@ func (g *StoreGenerator) AddConstructor() {
 func (g *StoreGenerator) AddConfigStruct() {
 	modelConfigs := make([]Code, 0)
 	for _, m := range g.Models {
-		name := PrivateGoName(m.Settings().Names().ConfigStruct)
+		name := m.Settings().Names().ConfigStruct
 		modelConfigs = append(modelConfigs, Id(name).Id(m.Settings().Names().ConfigStruct))
 	}
 
