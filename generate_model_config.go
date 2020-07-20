@@ -2,23 +2,23 @@ package banister
 
 import (
 	"fmt"
-	"github.com/dave/jennifer/jen"
+	. "github.com/dave/jennifer/jen"
 )
 
 type ModelConfigGenerator struct {
 	Model Model
-	File  *jen.File
+	File  *File
 }
 
-func NewModelConfigGenerator(file *jen.File, model Model) *ModelConfigGenerator {
+func NewModelConfigGenerator(file *File, model Model) *ModelConfigGenerator {
 	return &ModelConfigGenerator{Model: model, File: file}
 }
 
-func (g *ModelConfigGenerator) AddHookField(name, timing, op string) *jen.Statement {
+func (g *ModelConfigGenerator) AddHookField(name, timing, op string) *Statement {
 	comment := fmt.Sprintf("// %s sets a hook for the model that will \n"+
 		"// be called %s the model is %s into the database.", name, timing, op)
-	return jen.Comment(comment).Line().Id(name).Func().Params(
-		jen.Id("m").Op("*").Id(g.Model.Settings().Names().ModelStruct),
+	return Comment(comment).Line().Id(name).Func().Params(
+		Id("m").Op("*").Id(g.Model.Settings().Names().ModelStruct),
 	)
 }
 

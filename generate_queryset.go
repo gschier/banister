@@ -1,13 +1,13 @@
 package banister
 
-import "github.com/dave/jennifer/jen"
+import . "github.com/dave/jennifer/jen"
 
 type QuerysetGenerator struct {
-	File  *jen.File
+	File  *File
 	Model Model
 }
 
-func NewQuerysetGenerator(file *jen.File, model Model) *QuerysetGenerator {
+func NewQuerysetGenerator(file *File, model Model) *QuerysetGenerator {
 	return &QuerysetGenerator{File: file, Model: model}
 }
 
@@ -17,37 +17,37 @@ func (g *QuerysetGenerator) names() GeneratedModelNames {
 
 func (g *QuerysetGenerator) AddFilterArgsStruct() {
 	g.File.Type().Id(g.names().QuerysetFilterArgStruct).Struct(
-		jen.Id("filter").Qual("github.com/Masterminds/squirrel", "Sqlizer"),
-		jen.Id("joins").Index().String(),
+		Id("filter").Qual("github.com/Masterminds/squirrel", "Sqlizer"),
+		Id("joins").Index().String(),
 	)
 }
 
 func (g *QuerysetGenerator) AddOrderByArgsStruct() {
 	g.File.Type().Id(g.names().QuerysetOrderByArgStruct).Struct(
-		jen.Id("field").String(),
-		jen.Id("order").String(),
-		jen.Id("join").String(),
+		Id("field").String(),
+		Id("order").String(),
+		Id("join").String(),
 	)
 }
 
 func (g *QuerysetGenerator) AddSetterArgsStruct() {
 	g.File.Type().Id(g.names().QuerysetSetterArgStruct).Struct(
-		jen.Id("field").String(),
-		jen.Id("value").Interface(),
+		Id("field").String(),
+		Id("value").Interface(),
 	)
 }
 
 func (g *QuerysetGenerator) AddConstructor() {
 	g.File.Func().Id(g.names().QuerysetConstructor).Params(
-		jen.Id("mgr").Op("*").Id(g.names().ManagerStruct),
-	).Params(jen.Op("*").Id(g.names().QuerysetStruct)).Block(
-		jen.Return(
-			jen.Op("&").Id(g.names().QuerysetStruct).Values(jen.Dict{
-				jen.Id("mgr"):     jen.Id("mgr"),
-				jen.Id("filter"):  jen.Id("make").Call(jen.Index().Id(g.names().QuerysetFilterArgStruct), jen.Lit(0)),
-				jen.Id("orderBy"): jen.Id("make").Call(jen.Index().Id(g.names().QuerysetOrderByArgStruct), jen.Lit(0)),
-				jen.Id("limit"):   jen.Lit(0),
-				jen.Id("offset"):  jen.Lit(0),
+		Id("mgr").Op("*").Id(g.names().ManagerStruct),
+	).Params(Op("*").Id(g.names().QuerysetStruct)).Block(
+		Return(
+			Op("&").Id(g.names().QuerysetStruct).Values(Dict{
+				Id("mgr"):     Id("mgr"),
+				Id("filter"):  Id("make").Call(Index().Id(g.names().QuerysetFilterArgStruct), Lit(0)),
+				Id("orderBy"): Id("make").Call(Index().Id(g.names().QuerysetOrderByArgStruct), Lit(0)),
+				Id("limit"):   Lit(0),
+				Id("offset"):  Lit(0),
 			}),
 		),
 	)
@@ -55,138 +55,141 @@ func (g *QuerysetGenerator) AddConstructor() {
 
 func (g *QuerysetGenerator) AddFilterMethod() {
 	g.AddChainedMethod("Filter",
-		[]jen.Code{jen.Id("filter").Op("...").Id(g.names().QuerysetFilterArgStruct)},
-		[]jen.Code{
-			jen.Id("qs").Dot("filter").Op("=").Id("append").Params(
-				jen.Id("qs").Dot("filter"),
-				jen.Id("filter").Op("..."),
+		[]Code{Id("filter").Op("...").Id(g.names().QuerysetFilterArgStruct)},
+		[]Code{
+			Id("qs").Dot("filter").Op("=").Id("append").Params(
+				Id("qs").Dot("filter"),
+				Id("filter").Op("..."),
 			),
-			jen.Return(jen.Id("qs")),
+			Return(Id("qs")),
 		},
 	)
 }
 
 func (g *QuerysetGenerator) AddOrderMethod() {
 	g.AddChainedMethod("Order",
-		[]jen.Code{jen.Id("orderBy").Op("...").Id(g.names().QuerysetOrderByArgStruct)},
-		[]jen.Code{
-			jen.Id("qs").Dot("orderBy").Op("=").Id("append").Params(
-				jen.Id("qs").Dot("orderBy"),
-				jen.Id("orderBy").Op("..."),
+		[]Code{Id("orderBy").Op("...").Id(g.names().QuerysetOrderByArgStruct)},
+		[]Code{
+			Id("qs").Dot("orderBy").Op("=").Id("append").Params(
+				Id("qs").Dot("orderBy"),
+				Id("orderBy").Op("..."),
 			),
-			jen.Return(jen.Id("qs")),
+			Return(Id("qs")),
 		},
 	)
 }
 
 func (g *QuerysetGenerator) AddLimitMethod() {
 	g.AddChainedMethod("Limit",
-		[]jen.Code{jen.Id("limit").Uint64()},
-		[]jen.Code{
-			jen.Id("qs").Dot("limit").Op("=").Id("limit"),
-			jen.Return(jen.Id("qs")),
+		[]Code{Id("limit").Uint64()},
+		[]Code{
+			Id("qs").Dot("limit").Op("=").Id("limit"),
+			Return(Id("qs")),
 		},
 	)
 }
 
 func (g *QuerysetGenerator) AddOffsetMethod() {
 	g.AddChainedMethod("Offset",
-		[]jen.Code{jen.Id("offset").Uint64()},
-		[]jen.Code{
-			jen.Id("qs").Dot("offset").Op("=").Id("offset"),
-			jen.Return(jen.Id("qs")),
+		[]Code{Id("offset").Uint64()},
+		[]Code{
+			Id("qs").Dot("offset").Op("=").Id("offset"),
+			Return(Id("qs")),
 		},
 	)
 }
 
 func (g *QuerysetGenerator) AddDeleteMethod() {
-	defineQuery := jen.Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Delete").Call(
-		jen.Lit(g.Model.Settings().DBTable),
+	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Delete").Call(
+		Lit(g.Model.Settings().DBTable),
 	)
 
-	applyFilters := jen.For(
-		jen.Op("_").Op(",").Id("w").Op(":=").Range().Id("qs").Dot("filter"),
+	applyFilters := For(
+		Op("_").Op(",").Id("w").Op(":=").Range().Id("qs").Dot("filter"),
 	).Block(
-		jen.Id("query").Op("=").Id("query").Dot("Where").Call(jen.Id("w").Dot("filter")),
+		Id("query").Op("=").Id("query").Dot("Where").Call(
+			Id("w").Dot("filter"),
+		),
 	)
 
-	toSql := jen.Id("q").Op(",").Id("args").Op(":=").Id("qs").Dot("toSQL").Call(jen.Id("query"))
-	execDB := jen.Op("_").Op(",").Err().Op(":=").Id("qs").Dot("mgr").Dot("db").Dot("Exec").Call(
-		jen.Id("q"),
-		jen.Id("args").Op("..."),
-	)
+	toSql := Id("q").Op(",").Id("args").Op(":=").
+		Id("qs").Dot("toSQL").Call(Id("query"))
+
+	execDB := Op("_").Op(",").Err().Op(":=").
+		Id("qs").Dot("mgr").Dot("db").Dot("Exec").
+		Call(
+			Id("q"),
+			Id("args").Op("..."),
+		)
 
 	g.AddMethod("Delete",
-		[]jen.Code{jen.Id("m").Op("*").Id(g.names().ModelStruct)},
-		[]jen.Code{
+		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
+		[]Code{
 			defineQuery.Line(),
 			applyFilters.Line(),
 			toSql,
 			execDB,
-			jen.Return(jen.Err()),
+			Return(Err()),
 		},
-		[]jen.Code{jen.Error()},
+		[]Code{Error()},
 	)
 }
 
 func (g *QuerysetGenerator) AddScanMethod() {
-	fields := make([]jen.Code, 0)
+	fields := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
-		fields = append(fields, jen.Op("&").Id("m").Dot(f.Settings().Name))
+		fields = append(fields, Op("&").Id("m").Dot(f.Settings().Name))
 	}
 
 	g.AddMethod("scan",
-		[]jen.Code{
-			jen.Id("r").Op("*").Qual("database/sql", "Rows"),
-			jen.Id("m").Op("*").Id(g.names().ModelStruct),
+		[]Code{
+			Id("r").Op("*").Qual("database/sql", "Rows"),
+			Id("m").Op("*").Id(g.names().ModelStruct),
 		},
-		[]jen.Code{jen.Return(jen.Id("r").Dot("Scan").Call(fields...))},
-		[]jen.Code{jen.Error()},
+		[]Code{Return(Id("r").Dot("Scan").Call(fields...))},
+		[]Code{Error()},
 	)
 }
 
 func (g *QuerysetGenerator) AddToSQLMethod() {
-	genSQL := jen.Id("query").Op(",").Id("args").Op(",").Err().Op(":=").
+	genSQL := Id("query").Op(",").Id("args").Op(",").Err().Op(":=").
 		Id("q").Dot("ToSql").Call()
 
-	maybePanic := jen.If(
-		jen.Err().Op("!=").Nil(),
+	maybePanic := If(
+		Err().Op("!=").Nil(),
 	).Block(
-		jen.Panic(jen.Err()),
+		Panic(Err()),
 	)
 
 	g.AddMethod("toSQL",
-		[]jen.Code{jen.Id("q").Qual("github.com/Masterminds/squirrel", "Sqlizer")},
-		[]jen.Code{
+		[]Code{Id("q").Qual("github.com/Masterminds/squirrel", "Sqlizer")},
+		[]Code{
 			genSQL,
 			maybePanic,
-			jen.Return(jen.Id("query"), jen.Id("args")),
+			Return(Id("query"), Id("args")),
 		},
-		[]jen.Code{
-			jen.String(),
-			jen.Index().Interface(),
+		[]Code{
+			String(),
+			Index().Interface(),
 		},
 	)
 }
 
 func (g *QuerysetGenerator) AddStarSelectMethod() {
-	selectArgs := make([]jen.Code, 0)
+	selectArgs := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
 		name := f.Settings().Names(g.Model).QualifiedColumn
-		selectArgs = append(selectArgs, jen.Line().Lit(name))
+		selectArgs = append(selectArgs, Line().Lit(name))
 	}
 
 	// query := squirrel.Select(...).From(...)
-	defineQuery := jen.Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Select").Call(
-		selectArgs...,
-	).Dot("From").Call(
-		jen.Lit(g.Model.Settings().DBTable),
-	)
+	defineQuery := Id("query").Op(":=").
+		Qual("github.com/Masterminds/squirrel", "Select").Call(selectArgs...).
+		Dot("From").Call(Lit(g.Model.Settings().DBTable))
 
 	// joinCheck := make(map[string]bool)
-	defineJoinCheck := jen.Id("joinCheck").Op(":=").Id("make").Call(
-		jen.Id("map").Index(jen.String()).Bool(),
-	)
+	defineJoinCheck := Id("joinCheck").Op(":=").
+		Id("make").Call(Id("map").Index(String()).Bool())
 
 	// Loop through things and add joins
 	// for _, w := range f.filters {
@@ -199,36 +202,40 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 	//     query = query.Join(j)
 	//   }
 	// }
-	loopAndJoin := jen.Comment("Assign filters and join if necessary").Line().For(
-		jen.Op("_").Op(",").Id("w").Op(":=").Range().Id("qs").Dot("filter"),
+	loopAndJoin := Comment("Assign filters and join if necessary").Line().For(
+		Op("_").Op(",").Id("w").Op(":=").Range().Id("qs").Dot("filter"),
 	).Block(
-		jen.Id("query").Op("=").Id("query").Dot("Where").Call(jen.Id("w").Dot("filter")),
-		jen.For(
-			jen.Op("_").Op(",").Id("j").Op(":=").Range().Id("w").Dot("joins"),
+		Id("query").Op("=").Id("query").Dot("Where").Call(
+			Id("w").Dot("filter"),
+		),
+		For(
+			Op("_").Op(",").Id("j").Op(":=").Range().Id("w").Dot("joins"),
 		).Block(
-			jen.If(jen.Op("_").Op(",").Id("ok").Op(":=").Id("joinCheck").Index(jen.Id("j")).Op(";").Id("ok")).Block(
-				jen.Continue(),
-			),
-			jen.Id("joinCheck").Index(jen.Id("j")).Op("=").True(),
-			jen.Id("query").Op("=").Id("query").Dot("Join").Call(jen.Id("j")),
+			If(Op("_").Op(",").Id("ok").Op(":=").
+				Id("joinCheck").Index(Id("j")).Op(";").Id("ok")).
+				Block(
+					Continue(),
+				),
+			Id("joinCheck").Index(Id("j")).Op("=").True(),
+			Id("query").Op("=").Id("query").Dot("Join").Call(Id("j")),
 		),
 	)
 
 	// Apply limit if necessary
-	applyLimit := jen.Comment("Apply limit if set").Line().If(
-		jen.Id("qs").Dot("limit").Op(">").Lit(0),
+	applyLimit := Comment("Apply limit if set").Line().If(
+		Id("qs").Dot("limit").Op(">").Lit(0),
 	).Block(
-		jen.Id("query").Op("=").Id("query").Dot("Limit").Call(
-			jen.Id("qs").Dot("limit"),
+		Id("query").Op("=").Id("query").Dot("Limit").Call(
+			Id("qs").Dot("limit"),
 		),
 	)
 
 	// Apply offset if necessary
-	applyOffset := jen.Comment("Apply offset if set").Line().If(
-		jen.Id("qs").Dot("offset").Op(">").Lit(0),
+	applyOffset := Comment("Apply offset if set").Line().If(
+		Id("qs").Dot("offset").Op(">").Lit(0),
 	).Block(
-		jen.Id("query").Op("=").Id("query").Dot("Offset").Call(
-			jen.Id("qs").Dot("offset"),
+		Id("query").Op("=").Id("query").Dot("Offset").Call(
+			Id("qs").Dot("offset"),
 		),
 	)
 
@@ -238,12 +245,10 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 	//	`  "UsersOverride"."created" DESC`,
 	//	 )
 	// }
-	applyDefaultOrder := jen.Comment("Apply default order if none specified").Line().If(
-		jen.Id("len").Call(
-			jen.Id("qs").Dot("orderBy"),
-		).Op("==").Lit(0),
+	applyDefaultOrder := Comment("Apply default order if none specified").Line().If(
+		Id("len").Call(Id("qs").Dot("orderBy")).Op("==").Lit(0),
 	).Block(
-		jen.Comment("TODO: Add default order-by"),
+		Comment("TODO: Add default order-by"),
 		// TODO: Add default order-by support
 		//  jen.Return(...),
 	)
@@ -263,17 +268,17 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 	//   joinCheck[s.join] = true
 	//   query = query.Join(s.join)
 	// }
-	applyOrderBy := jen.Comment("Apply user-specified order").Line().For(
-		jen.Op("_").Op(",").Id("s").Op(":=").Range().Id("qs").Dot("orderBy"),
+	applyOrderBy := Comment("Apply user-specified order").Line().For(
+		Op("_").Op(",").Id("s").Op(":=").Range().Id("qs").Dot("orderBy"),
 	).Block(
-		jen.Id("query").Op("=").Id("query").Dot("OrderBy").Call(
-			jen.Id("s").Dot("field").Op("+").Lit(" ").Op("+").Id("s").Dot("order"),
+		Id("query").Op("=").Id("query").Dot("OrderBy").Call(
+			Id("s").Dot("field").Op("+").Lit(" ").Op("+").Id("s").Dot("order"),
 		),
 	)
 
 	g.AddMethod("starSelect",
-		[]jen.Code{},
-		[]jen.Code{
+		[]Code{},
+		[]Code{
 			defineQuery.Line(),
 			defineJoinCheck.Line(),
 			loopAndJoin.Line(),
@@ -281,43 +286,45 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 			applyOffset.Line(),
 			applyDefaultOrder.Line(),
 			applyOrderBy.Line(),
-			jen.Return(jen.Id("query")),
+			Return(Id("query")),
 		},
-		[]jen.Code{jen.Qual("github.com/Masterminds/squirrel", "SelectBuilder")},
+		[]Code{
+			Qual("github.com/Masterminds/squirrel", "SelectBuilder"),
+		},
 	)
 }
 
 func (g *QuerysetGenerator) AddStruct() {
 	g.File.Type().Id(g.names().QuerysetStruct).Struct(
-		jen.Id("mgr").Op("*").Id(g.names().ManagerStruct),
-		jen.Id("filter").Index().Id(g.names().QuerysetFilterArgStruct),
-		jen.Id("orderBy").Index().Id(g.names().QuerysetOrderByArgStruct),
-		jen.Id("limit").Uint64(),
-		jen.Id("offset").Uint64(),
+		Id("mgr").Op("*").Id(g.names().ManagerStruct),
+		Id("filter").Index().Id(g.names().QuerysetFilterArgStruct),
+		Id("orderBy").Index().Id(g.names().QuerysetOrderByArgStruct),
+		Id("limit").Uint64(),
+		Id("offset").Uint64(),
 	)
 }
 
 // AddChainedMethod is a helper to add a struct method that returns an instance
 // of the struct for chaining.
-func (g *QuerysetGenerator) AddChainedMethod(name string, args []jen.Code, block []jen.Code) {
-	returnType := jen.Op("*").Id(g.names().QuerysetStruct)
-	g.AddMethod(name, args, block, []jen.Code{returnType})
+func (g *QuerysetGenerator) AddChainedMethod(name string, args []Code, block []Code) {
+	returnType := Op("*").Id(g.names().QuerysetStruct)
+	g.AddMethod(name, args, block, []Code{returnType})
 }
 
 // AddMethod is a helper to add a struct method
-func (g *QuerysetGenerator) AddMethod(name string, args []jen.Code, block []jen.Code, returns []jen.Code) {
-	receiver := jen.Id("qs").Op("*").Id(g.names().QuerysetStruct)
+func (g *QuerysetGenerator) AddMethod(name string, args []Code, block []Code, returns []Code) {
+	receiver := Id("qs").Op("*").Id(g.names().QuerysetStruct)
 	g.File.Func().Params(receiver).Id(name).Params(args...).Params(returns...).Block(block...)
 }
 
 func (g *QuerysetGenerator) AddFilterOptionsStruct() {
-	fields := make([]jen.Code, 0)
-	values := jen.Dict{}
+	fields := make([]Code, 0)
+	values := Dict{}
 	for _, f := range g.Model.Fields() {
 		fieldName := f.Settings().Name
 		fieldType := f.Settings().Names(g.Model).FilterOptionStruct
-		fields = append(fields, jen.Id(fieldName).Id(fieldType))
-		values[jen.Id(fieldName)] = jen.Id(fieldType).Values()
+		fields = append(fields, Id(fieldName).Id(fieldType))
+		values[Id(fieldName)] = Id(fieldType).Values()
 	}
 
 	// Define options struct and instantiate an instance inline, so we

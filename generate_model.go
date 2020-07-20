@@ -2,16 +2,16 @@ package banister
 
 import (
 	"fmt"
-	"github.com/dave/jennifer/jen"
+	. "github.com/dave/jennifer/jen"
 	"strings"
 )
 
 type ModelGenerator struct {
 	Model Model
-	File  *jen.File
+	File  *File
 }
 
-func NewModelGenerator(file *jen.File, model Model) *ModelGenerator {
+func NewModelGenerator(file *File, model Model) *ModelGenerator {
 	return &ModelGenerator{Model: model, File: file}
 }
 
@@ -19,7 +19,7 @@ func (g *ModelGenerator) names() GeneratedModelNames {
 	return g.Model.Settings().Names()
 }
 
-func (g *ModelGenerator) FieldStmt(f Field) jen.Code {
+func (g *ModelGenerator) FieldStmt(f Field) Code {
 	goType := fmt.Sprintf("%T", f.EmptyDefault())
 	if f.Settings().Null {
 		goType = "*" + goType
@@ -28,39 +28,39 @@ func (g *ModelGenerator) FieldStmt(f Field) jen.Code {
 	segments := strings.SplitN(goType, ".", 2)
 
 	if len(segments) == 1 {
-		return jen.Id(f.Settings().Name).Id(goType)
+		return Id(f.Settings().Name).Id(goType)
 	}
 
 	// Add import for types that require packages like time.Time
-	return jen.Id(f.Settings().Name).Qual(segments[0], segments[1])
+	return Id(f.Settings().Name).Qual(segments[0], segments[1])
 }
 
 func (g *ModelGenerator) AddJSONMethod() {
 	g.File.Comment("PrintJSON prints out a JSON string of the model for debugging")
 	g.File.Func().Params(
-		jen.Id("model").Op("*").Id(g.names().ModelStruct),
+		Id("model").Op("*").Id(g.names().ModelStruct),
 	).Id("PrintJSON").Params(
 	// No function args
 	).Params(
 	// Returns nothing
 	).Block(
-		jen.List(jen.Id("b"), jen.Err()).Op(":=").Qual("encoding/json", "MarshalIndent").Call(
-			jen.Id("model"),
-			jen.Lit(""),
-			jen.Lit("  "),
+		List(Id("b"), Err()).Op(":=").Qual("encoding/json", "MarshalIndent").Call(
+			Id("model"),
+			Lit(""),
+			Lit("  "),
 		),
-		jen.If(jen.Parens(jen.Err().Op("!=").Nil())).Block(jen.Panic(jen.Err())),
-		jen.Qual("fmt", "Printf").Call(
-			jen.Lit("%T: %s"),
-			jen.Id("model"),
-			jen.Id("b"),
+		If(Parens(Err().Op("!=").Nil())).Block(Panic(Err())),
+		Qual("fmt", "Printf").Call(
+			Lit("%T: %s"),
+			Id("model"),
+			Id("b"),
 		),
 	)
 }
 
 func (g *ModelGenerator) Generate() {
 	// Generate the struct field definitions
-	fields := make([]jen.Code, 0)
+	fields := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
 		fields = append(fields, g.FieldStmt(f))
 	}
