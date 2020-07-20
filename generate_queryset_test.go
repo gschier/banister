@@ -9,73 +9,81 @@ import (
 	"testing"
 )
 
-func TestQuerysetGenerator_Generate(t *testing.T) {
+func TestQuerysetGenerator_AddStarSelectMethod(t *testing.T) {
 	file := jen.NewFile("dummy")
 	m := TestUserModel()
-	NewQuerysetGenerator(file, m).Generate()
+	NewQuerysetGenerator(file, m).AddStarSelectMethod()
 	assert.Equal(t, strings.TrimSpace(`
 package dummy
 
 import squirrel "github.com/Masterminds/squirrel"
 
-type UserQueryset struct {
-	filter  []userQuerysetFilterArg
-	orderBy []userQuerysetOrderByArg
-	limit   uint64
-	offset  uint64
-}
+func (qs *UserQueryset) starSelect() squirrel.SelectBuilder {
+	query := squirrel.Select(
+		"\"users\".\"id\"",
+		"\"users\".\"age\"",
+		"\"users\".\"name\"",
+		"\"users\".\"username\"",
+		"\"users\".\"created\"").From("users")
 
-func NewUserQueryset() *UserQueryset {
-	return &UserQueryset{
-		filter:  make([]userQuerysetFilterArg, 0),
-		limit:   0,
-		offset:  0,
-		orderBy: make([]userQuerysetOrderByArg, 0),
+	joinCheck := make(map[string]bool)
+
+	// Assign filters and join if necessary
+	for _, w := range qs.filter {
+		query = query.Where(w.filter)
+		for _, j := range w.joins {
+			if _, ok := joinCheck[j]; ok {
+				continue
+			}
+			joinCheck[j] = true
+			query = query.Join(j)
+		}
 	}
+
+	// Apply limit if set
+	if qs.limit > 0 {
+		query = query.Limit(f.limit)
+	}
+
+	// Apply offset if set
+	if qs.offset > 0 {
+		query = query.Offset(f.offset)
+	}
+
+	// Apply default order if none specified
+	if len(qs.orderBy) == 0 {
+		// TODO: Add default order-by
+	}
+
+	// Apply user-specified order
+	for _, s := range qs.orderBy {
+		query = query.OrderBy(s.field + " " + s.order)
+	}
+
+	return query
 }
-func (qs *UserQueryset) Filter(filter ...userQuerysetFilterArg) *UserQueryset {
-	qs.filter = append(qs.filter, filter...)
-	return qs
-}
-func (qs *UserQueryset) Order(orderBy ...userQuerysetOrderByArg) *UserQueryset {
-	qs.orderBy = append(qs.orderBy, orderBy...)
-	return qs
-}
-func (qs *UserQueryset) Limit(limit uint64) *UserQueryset {
-	qs.limit = limit
-	return qs
-}
-func (qs *UserQueryset) Offset(offset uint64) *UserQueryset {
-	qs.offset = offset
-	return qs
+`), strings.TrimSpace(file.GoString()))
 }
 
-type userQuerysetFilterArg struct {
-	filter squirrel.Sqlizer
-	joins  []string
-}
-type userQuerysetOrderByArg struct {
-	field string
-	order string
-	join  string
-}
-type userQuerysetSetterArg struct {
-	field string
-	value interface{}
-}
+func TestQuerysetGenerator_AddDeleteMethod(t *testing.T) {
+	file := jen.NewFile("dummy")
+	m := TestUserModel()
+	NewQuerysetGenerator(file, m).AddDeleteMethod()
+	assert.Equal(t, strings.TrimSpace(`
+package dummy
 
-var WhereUser = struct {
-	ID       UserIDFilter
-	Age      UserAgeFilter
-	Name     UserNameFilter
-	Username UserUsernameFilter
-	Created  UserCreatedFilter
-}{
-	Age:      &UserAgeFilter{},
-	Created:  &UserCreatedFilter{},
-	ID:       &UserIDFilter{},
-	Name:     &UserNameFilter{},
-	Username: &UserUsernameFilter{},
+import squirrel "github.com/Masterminds/squirrel"
+
+func (qs *UserQueryset) Delete(m *User) error {
+	query := squirrel.Delete("users")
+
+	for _, w := range qs.filters {
+		query = query.Where(w.filter)
+	}
+
+	q, args := toSQL(query)
+	_, err := f.mgr.db.Exec(q, args...)
+	return err
 }
 `), strings.TrimSpace(file.GoString()))
 }

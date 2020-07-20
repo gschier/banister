@@ -61,10 +61,12 @@ func generateJen(c *GenerateConfig) map[string]*jen.File {
 	}
 
 	// Generate things per model
+	NewStoreGenerator(file(globalNames.StoreStruct), c.Models).Generate()
 	for _, m := range c.Models {
-		NewModelGenerator(file(m.Settings().Name+"Model"), m).Generate()
-		NewModelConfigGenerator(file(m.Settings().Name+"Config"), m).Generate()
-		NewQuerysetGenerator(file(m.Settings().Name+"Queryset"), m).Generate()
+		NewModelGenerator(file(m.Settings().Names().ModelStruct), m).Generate()
+		NewModelConfigGenerator(file(m.Settings().Names().ConfigStruct), m).Generate()
+		NewManagerGenerator(file(m.Settings().Names().ManagerStruct), m).Generate()
+		NewQuerysetGenerator(file(m.Settings().Names().QuerysetStruct), m).Generate()
 
 		filtersFile := file(m.Settings().Name + "Filters")
 		for _, f := range m.Fields() {

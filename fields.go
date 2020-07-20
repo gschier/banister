@@ -30,8 +30,8 @@ func (s *FieldSettings) Fix() {
 	}
 }
 
-func (s FieldSettings) Names(modelName string) GeneratedFieldNames {
-	return NamesForField(modelName, s.Name)
+func (s FieldSettings) Names(model Model) GeneratedFieldNames {
+	return NamesForField(model.Settings(), s)
 }
 
 func (s FieldSettings) GenFilterStructName(modelName string) string {

@@ -17,7 +17,7 @@ func NewFilterGenerator(file *jen.File, field Field, model Model) *FilterGenerat
 }
 
 func (g *FilterGenerator) names() GeneratedFieldNames {
-	return g.Field.Settings().Names(g.Model.Settings().Name)
+	return g.Field.Settings().Names(g.Model)
 }
 
 func (g *FilterGenerator) modelNames() GeneratedModelNames {

@@ -1,15 +1,17 @@
 package banister
 
 import (
+	"fmt"
 	"github.com/iancoleman/strcase"
 	"github.com/takuoki/gocase"
+	"strings"
 )
 
 type GeneratedModelNames struct {
-	StoreStruct               string
-	ManagerStruct             string
-	QuerysetStruct            string
-	QuerysetStructConstructor string
+	ManagerStruct       string
+	ManagerConstructor  string
+	QuerysetStruct      string
+	QuerysetConstructor string
 
 	ModelStruct  string
 	ConfigStruct string
@@ -31,14 +33,23 @@ type GeneratedFieldNames struct {
 	FilterOptionStruct  string
 	OrderByOptionStruct string
 	SetterOptionStruct  string
+	QualifiedColumn     string
+}
+
+var globalNames = struct {
+	StoreStruct       string
+	StoreConfigStruct string
+}{
+	StoreStruct:       PublicGoName("Store"),
+	StoreConfigStruct: PublicGoName("StoreConfig"),
 }
 
 func NamesForModel(modelName string) GeneratedModelNames {
 	return GeneratedModelNames{
-		StoreStruct:               PublicGoName("Store"),
-		ManagerStruct:             PublicGoName(modelName + "Manager"),
-		QuerysetStruct:            PublicGoName(modelName + "Queryset"),
-		QuerysetStructConstructor: PublicGoName("New" + modelName + "Queryset"),
+		ManagerStruct:       PublicGoName(modelName + "Manager"),
+		ManagerConstructor:  PublicGoName("New" + modelName + "Manager"),
+		QuerysetStruct:      PublicGoName(modelName + "Queryset"),
+		QuerysetConstructor: PublicGoName("New" + modelName + "Queryset"),
 
 		ModelStruct:  PublicGoName(modelName),
 		ConfigStruct: PublicGoName(modelName + "Config"),
@@ -57,11 +68,20 @@ func NamesForModel(modelName string) GeneratedModelNames {
 	}
 }
 
-func NamesForField(modelName, fieldName string) GeneratedFieldNames {
+func NamesForField(modelSettings ModelSettings, fieldSettings FieldSettings) GeneratedFieldNames {
+	modelName := modelSettings.Name
+	fieldName := fieldSettings.Name
+
 	return GeneratedFieldNames{
 		FilterOptionStruct:  PublicGoName(modelName + fieldName + "Filter"),
 		OrderByOptionStruct: PublicGoName(modelName + fieldName + "OrderBy"),
 		SetterOptionStruct:  PublicGoName(modelName + fieldName + "Setter"),
+
+		QualifiedColumn: fmt.Sprintf(
+			`"%s"."%s"`,
+			strings.ReplaceAll(modelSettings.DBTable, `"`, `\"`),
+			strings.ReplaceAll(fieldSettings.DBColumn, `"`, `\"`),
+		),
 	}
 }
 
