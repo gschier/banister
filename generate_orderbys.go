@@ -25,6 +25,15 @@ func (g *OrderBysGenerator) Generate() {
 			Id("order"): Lit("ASC"),
 			Id("join"):  Lit(""),
 		})
+
+		name = f.Settings().Name + "Descending"
+		structName = g.Model.Settings().Names().QuerysetOrderByArgStruct
+		fields = append(fields, Id(name).Id(structName))
+		values[Id(name)] = Id(structName).Values(Dict{
+			Id("field"): Lit(f.Settings().Names(g.Model).QualifiedColumn),
+			Id("order"): Lit("DESC"),
+			Id("join"):  Lit(""),
+		})
 	}
 
 	g.File.Var().Id(g.Model.Settings().Names().OrderByOptionsVar).Op("=").

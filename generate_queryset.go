@@ -66,8 +66,8 @@ func (g *QuerysetGenerator) AddFilterMethod() {
 	)
 }
 
-func (g *QuerysetGenerator) AddOrderMethod() {
-	g.AddChainedMethod("Order",
+func (g *QuerysetGenerator) AddOrderByMethod() {
+	g.AddChainedMethod("OrderBy",
 		[]Code{Id("orderBy").Op("...").Id(g.names().QuerysetOrderByArgStruct)},
 		[]Code{
 			Id("qs").Dot("orderBy").Op("=").Id("append").Params(
@@ -382,7 +382,7 @@ func (g *QuerysetGenerator) Generate() {
 
 	// Methods
 	g.AddFilterMethod()
-	g.AddOrderMethod()
+	g.AddOrderByMethod()
 	g.AddLimitMethod()
 	g.AddOffsetMethod()
 	g.AddUpdateMethod()

@@ -81,7 +81,7 @@ func NamesForModel(modelName string) GeneratedModelNames {
 		QuerysetSetterArgStruct:  PrivateGoName(modelName + "SetterArg"),
 
 		FilterOptionsVar:  PublicGoName("Where" + modelName),
-		OrderByOptionsVar: PublicGoName("OrderBy" + modelName),
+		OrderByOptionsVar: PublicGoName("Sort" + modelName),
 		SetterOptionsVar:  PublicGoName("Set" + modelName),
 	}
 }
