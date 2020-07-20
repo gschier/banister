@@ -110,7 +110,7 @@ func (g *QuerysetGenerator) AddDeleteMethod() {
 		jen.Id("query").Op("=").Id("query").Dot("Where").Call(jen.Id("w").Dot("filter")),
 	)
 
-	toSql := jen.Id("q").Op(",").Id("args").Op(":=").Id("toSQL").Call(jen.Id("query"))
+	toSql := jen.Id("q").Op(",").Id("args").Op(":=").Id("qs").Dot("toSQL").Call(jen.Id("query"))
 	execDB := jen.Op("_").Op(",").Err().Op(":=").Id("qs").Dot("mgr").Dot("db").Dot("Exec").Call(
 		jen.Id("q"),
 		jen.Id("args").Op("..."),
@@ -142,6 +142,30 @@ func (g *QuerysetGenerator) AddScanMethod() {
 		},
 		[]jen.Code{jen.Return(jen.Id("r").Dot("Scan").Call(fields...))},
 		[]jen.Code{jen.Error()},
+	)
+}
+
+func (g *QuerysetGenerator) AddToSQLMethod() {
+	genSQL := jen.Id("query").Op(",").Id("args").Op(",").Err().Op(":=").
+		Id("q").Dot("ToSql").Call()
+
+	maybePanic := jen.If(
+		jen.Err().Op("!=").Nil(),
+	).Block(
+		jen.Panic(jen.Err()),
+	)
+
+	g.AddMethod("toSQL",
+		[]jen.Code{jen.Id("q").Qual("github.com/Masterminds/squirrel", "Sqlizer")},
+		[]jen.Code{
+			genSQL,
+			maybePanic,
+			jen.Return(jen.Id("query"), jen.Id("args")),
+		},
+		[]jen.Code{
+			jen.String(),
+			jen.Index().Interface(),
+		},
 	)
 }
 
@@ -318,6 +342,7 @@ func (g *QuerysetGenerator) Generate() {
 	// TODO: g.AddCountMethod()
 	g.AddScanMethod()
 	g.AddStarSelectMethod()
+	g.AddToSQLMethod()
 
 	// Other types
 	g.AddFilterArgsStruct()

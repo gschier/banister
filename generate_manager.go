@@ -25,7 +25,7 @@ func (g *ManagerGenerator) AddMethod(name string, args []jen.Code, block []jen.C
 
 func (g *ManagerGenerator) AddStruct() {
 	g.File.Type().Id(g.names().ManagerStruct).Struct(
-		jen.Id("db").Qual("database/sql", "DB"),
+		jen.Id("db").Op("*").Qual("database/sql", "DB"),
 		jen.Id("storeConfig").Id(globalNames.StoreConfigStruct),
 		jen.Id("config").Id(g.names().ConfigStruct),
 	)

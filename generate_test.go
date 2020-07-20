@@ -9,7 +9,8 @@ import (
 
 func TestGenerate(t *testing.T) {
 	src := GenerateToString(&GenerateConfig{
-		OutputDir: "./generate/foo/bar",
+		OutputDir:   "./generate/foo/bar",
+		PackageName: "dummy",
 		Models: []Model{
 			testutil.TestUserModel(),
 			testutil.TestPostModel(),

@@ -42,12 +42,12 @@ func (qs *UserQueryset) starSelect() squirrel.SelectBuilder {
 
 	// Apply limit if set
 	if qs.limit > 0 {
-		query = query.Limit(f.limit)
+		query = query.Limit(qs.limit)
 	}
 
 	// Apply offset if set
 	if qs.offset > 0 {
-		query = query.Offset(f.offset)
+		query = query.Offset(qs.offset)
 	}
 
 	// Apply default order if none specified
@@ -77,12 +77,12 @@ import squirrel "github.com/Masterminds/squirrel"
 func (qs *UserQueryset) Delete(m *User) error {
 	query := squirrel.Delete("users")
 
-	for _, w := range qs.filters {
+	for _, w := range qs.filter {
 		query = query.Where(w.filter)
 	}
 
 	q, args := toSQL(query)
-	_, err := f.mgr.db.Exec(q, args...)
+	_, err := qs.mgr.db.Exec(q, args...)
 	return err
 }
 `), strings.TrimSpace(file.GoString()))

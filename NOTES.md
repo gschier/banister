@@ -23,7 +23,17 @@ General Notes
 - `common` might be able to be split into two
     - One to be used by generated client
     - One to be used by generated migrations
-- 
+    
+To-Do
+-----
+
+- [ ] Generate global `Store` type
+- [ ] Generate model manager types
+- [ ] Generate model setters
+- [ ] Generate model orderBys
+- [ ] Create helper library for generated code to lean on
+    - Can it be part of the backend implementations?
+- [ ] Custom field filter names based on types (eg. `Gt(...)` for dates should be `After(...)`)
 
 Generated Types
 ---------------

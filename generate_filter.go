@@ -66,8 +66,17 @@ func (g *FilterGenerator) TableDotColumn() string {
 }
 
 func (g *FilterGenerator) AddSimpleSquirrelFilter(name, sqName string) {
+	// If type comes from package, we need to qualify it
+	segments := strings.SplitN(g.goType(), ".", 2)
+	var defineGoType *jen.Statement
+	if len(segments) == 2 {
+		defineGoType = jen.Id("v").Qual(segments[0], segments[1])
+	} else {
+		defineGoType = jen.Id("v").Id(segments[0])
+	}
+
 	g.AddFilterMethod(name,
-		jen.Id("v").Id(g.goType()),
+		defineGoType,
 		jen.Op("&").Qual("github.com/Masterminds/squirrel", sqName).Values(jen.Dict{
 			jen.Lit(g.TableDotColumn()): jen.Id("v"),
 		}),
