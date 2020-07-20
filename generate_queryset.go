@@ -375,21 +375,6 @@ func (g *QuerysetGenerator) AddMethod(name string, args []Code, block []Code, re
 	g.File.Func().Params(receiver).Id(name).Params(args...).Params(returns...).Block(block...)
 }
 
-func (g *QuerysetGenerator) AddFilterOptionsStruct() {
-	fields := make([]Code, 0)
-	values := Dict{}
-	for _, f := range g.Model.Fields() {
-		fieldName := f.Settings().Name
-		fieldType := f.Settings().Names(g.Model).FilterOptionStruct
-		fields = append(fields, Id(fieldName).Id(fieldType))
-		values[Id(fieldName)] = Id(fieldType).Values()
-	}
-
-	// Define options struct and instantiate an instance inline, so we
-	// don't clutter the scope with unnecessary type.
-	g.File.Var().Id(g.names().FilterOptionsVar).Op("=").Struct(fields...).Values(values)
-}
-
 func (g *QuerysetGenerator) Generate() {
 	// Create main struct and constructor
 	g.AddStruct()
@@ -413,7 +398,4 @@ func (g *QuerysetGenerator) Generate() {
 	g.AddFilterArgsStruct()
 	g.AddOrderByArgsStruct()
 	g.AddSetterArgsStruct()
-
-	// Where helper
-	g.AddFilterOptionsStruct()
 }

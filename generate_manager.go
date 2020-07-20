@@ -93,6 +93,11 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 	columns := make([]Code, 0)
 	values := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
+		// Skip auto-created fields
+		if f.Type() == Auto {
+			continue
+		}
+
 		columns = append(columns, Lit(f.Settings().DBColumn))
 		values = append(values, Op("m").Dot(f.Settings().Name))
 	}

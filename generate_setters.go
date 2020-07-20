@@ -41,13 +41,22 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 		defineGoType = Id("v").Id(segments[0])
 	}
 
+	// Create assign statement, depending if the value is nullable
+	// or not
+	var assignTo *Statement
+	if f.Settings().Null {
+		assignTo = Op("&").Id("v")
+	} else {
+		assignTo = Id("v")
+	}
+
 	g.AddMethod(f.Settings().Name,
 		[]Code{defineGoType},
 		[]Code{
 			Return(
 				Id(g.names().QuerysetSetterArgStruct).Values(Dict{
 					Id("field"): Lit(strings.ReplaceAll(f.Settings().DBColumn, `"`, `\"`)),
-					Id("value"): Id("v"),
+					Id("value"): assignTo,
 				}),
 			),
 		},
