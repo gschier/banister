@@ -100,9 +100,45 @@ func (g *QuerysetGenerator) AddOffsetMethod() {
 }
 
 func (g *QuerysetGenerator) AddUpdateMethod() {
+	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Update").Call(
+		Lit(g.Model.Settings().DBTable),
+	)
+
+	mapSets := Comment("Apply setters to query").Line().For(
+		Op("_").Op(",").Id("s").Op(":=").Range().Id("set"),
+	).Block(
+		Id("query").Op("=").Id("query").Dot("Set").Call(
+			Id("s").Dot("field"),
+			Id("s").Dot("value"),
+		),
+	)
+
+	mapFilters := Comment("Apply filters to query").Line().For(
+		Op("_").Op(",").Id("f").Op(":=").Range().Id("qs").Dot("filter"),
+	).Block(
+		Id("query").Op("=").Id("query").Dot("Where").Call(
+			Id("f").Dot("filter"),
+		),
+	)
+
+	getSQL := Id("q").Op(",").Id("args").Op(":=").
+		Id("qs").Dot("toSQL").Call(Id("query"))
+
+	exec := Id("_").Op(",").Err().Op(":=").Id("qs").Dot("mgr").Dot("db").Dot("Exec").Call(
+		Id("q"),
+		Id("args").Op("..."),
+	)
+
 	g.AddMethod("Update",
 		[]Code{Id("set").Op("...").Id(g.names().QuerysetSetterArgStruct)},
-		[]Code{Panic(Lit("implement me"))},
+		[]Code{
+			defineQuery.Line(),
+			mapSets.Line(),
+			mapFilters.Line(),
+			getSQL,
+			exec,
+			Return(Err()),
+		},
 		[]Code{Error()},
 	)
 }

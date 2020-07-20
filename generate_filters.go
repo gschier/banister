@@ -56,14 +56,6 @@ func (g *FilterGenerator) SqExpr(op Operation) *Statement {
 	return Qual("github.com/Masterminds/squirrel", "Expr").Call()
 }
 
-func (g *FilterGenerator) TableDotColumn(f Field) string {
-	return fmt.Sprintf(
-		`"%s"."%s"`,
-		strings.ReplaceAll(g.Model.Settings().DBTable, `"`, `\"`),
-		strings.ReplaceAll(f.Settings().DBColumn, `"`, `\"`),
-	)
-}
-
 func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) {
 	// If type comes from package, we need to qualify it
 	segments := strings.SplitN(g.goType(f), ".", 2)
@@ -79,7 +71,7 @@ func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) 
 		name,
 		defineGoType,
 		Op("&").Qual("github.com/Masterminds/squirrel", sqName).Values(Dict{
-			Lit(g.TableDotColumn(f)): Id("v"),
+			Lit(g.names(f).QualifiedColumn): Id("v"),
 		}),
 	)
 }
@@ -131,7 +123,7 @@ func (g *FilterGenerator) Generate() {
 				"Null",
 				nil,
 				Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
-					Lit(g.TableDotColumn(f)): Nil(),
+					Lit(g.names(f).QualifiedColumn): Nil(),
 				}),
 			)
 		}

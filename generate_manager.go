@@ -50,10 +50,26 @@ func (g *ManagerGenerator) AddConstructor() {
 }
 
 func (g *ManagerGenerator) AddDeleteMethod() {
+	pkSettings := PrimaryKeyField(g.Model).Settings()
+	callQuerysetDelete := Err().Op(":=").Id("mgr").Dot("Filter").Call(
+		Id(g.names().QuerysetFilterArgStruct).Values(Dict{
+			Id("filter"): Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
+				Lit(pkSettings.DBColumn): Id("m").Dot(pkSettings.Name),
+			}),
+		}),
+	).Dot("Delete").Call()
+
+	checkErr := If(Err().Op("!=").Nil()).Block(Return(Err()))
+
 	g.AddMethod("Delete",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
 		[]Code{
-			Panic(Lit("implement me")),
+			g.MaybeCallHook(globalNames.HookPreDelete).Line(),
+			Comment("Call delete on queryset with PK as the filter"),
+			callQuerysetDelete,
+			checkErr.Line(),
+			g.MaybeCallHook(globalNames.HookPostDelete).Line(),
+			Return(Nil()),
 		},
 		[]Code{Error()},
 	)
@@ -83,13 +99,15 @@ func (g *ManagerGenerator) AddInsertMethod() {
 	)
 }
 
-func (g *ManagerGenerator) AddInsertInstanceMethod() {
-	callPreInsertHook := If(
-		Id("mgr").Dot("config").Dot(globalNames.HookPreInsert).Op("!=").Nil(),
+func (g *ManagerGenerator) MaybeCallHook(hookName string) *Statement {
+	return Comment("Call hook if provided").Line().If(
+		Id("mgr").Dot("config").Dot(hookName).Op("!=").Nil(),
 	).Block(
-		Id("mgr").Dot("config").Dot(globalNames.HookPreInsert).Call(Id("m")),
+		Id("mgr").Dot("config").Dot(hookName).Call(Id("m")),
 	)
+}
 
+func (g *ManagerGenerator) AddInsertInstanceMethod() {
 	columns := make([]Code, 0)
 	values := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
@@ -120,16 +138,10 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 	assignPK := Comment("Update PK on model").Line().
 		Id("m").Dot(PrimaryKeyField(g.Model).Settings().Name).Op("=").Id("id")
 
-	callPostInsertHook := If(
-		Id("mgr").Dot("config").Dot(globalNames.HookPostInsert).Op("!=").Nil(),
-	).Block(
-		Id("mgr").Dot("config").Dot(globalNames.HookPostInsert).Call(Id("m")),
-	)
-
 	g.AddMethod("insertInstance",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
 		[]Code{
-			callPreInsertHook.Line(),
+			g.MaybeCallHook(globalNames.HookPreInsert).Line(),
 			defineQuery,
 			addColumns,
 			addValues.Line(),
@@ -139,7 +151,7 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 			lastInsertId,
 			checkErr.Line(),
 			assignPK.Line(),
-			callPostInsertHook.Line(),
+			g.MaybeCallHook(globalNames.HookPostInsert).Line(),
 			Return(Nil()),
 		},
 		[]Code{Error()},
@@ -147,9 +159,37 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 }
 
 func (g *ManagerGenerator) AddUpdateMethod() {
+	checkErr := If(Err().Op("!=").Nil()).Block(Return(Err()))
+	setters := make([]Code, 0)
+	for _, f := range g.Model.Fields() {
+		// TODO: Maybe don't update primary key? Should see what Django
+		//   does here.
+		setter := Id(g.names().QuerysetSetterArgStruct).Values(Dict{
+			Id("field"): Lit(f.Settings().DBColumn),
+			Id("value"): Id("m").Dot(f.Settings().Name),
+		})
+		setters = append(setters, setter)
+	}
+
+	pkSettings := PrimaryKeyField(g.Model).Settings()
+	callQuerysetDelete := Err().Op(":=").Id("mgr").Dot("Filter").Call(
+		Id(g.names().QuerysetFilterArgStruct).Values(Dict{
+			Id("filter"): Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
+				Lit(pkSettings.DBColumn): Id("m").Dot(pkSettings.Name),
+			}),
+		}),
+	).Dot("Update").Call(setters...)
+
 	g.AddMethod("Update",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
-		[]Code{Panic(Lit("implement me"))},
+		[]Code{
+			g.MaybeCallHook(globalNames.HookPreUpdate).Line(),
+			Comment("Call update on queryset with PK as the filter"),
+			callQuerysetDelete,
+			checkErr.Line(),
+			g.MaybeCallHook(globalNames.HookPostUpdate).Line(),
+			Return(Nil()),
+		},
 		[]Code{Error()},
 	)
 }
@@ -159,7 +199,7 @@ func (g *ManagerGenerator) AddGetMethod() {
 	g.AddMethod("Get",
 		[]Code{Id("id").Id(pkGoType)},
 		[]Code{Panic(Lit("implement me"))},
-		[]Code{Op("*").Id(g.names().ModelStruct)},
+		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
 	)
 }
 
