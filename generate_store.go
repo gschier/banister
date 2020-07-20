@@ -14,9 +14,18 @@ func NewStoreGenerator(file *File, models []Model) *StoreGenerator {
 }
 
 func (g *StoreGenerator) AddStruct() {
+	modelConfigs := make([]Code, 0)
+	for _, m := range g.Models {
+		name := m.Settings().Names().ManagerAccessor
+		modelConfigs = append(modelConfigs, Id(name).Id(m.Settings().Names().ManagerStruct))
+	}
+
 	g.File.Type().Id(globalNames.StoreStruct).Struct(
-		Id("db").Op("*").Qual("database/sql", "Conn"),
-		Id("config").Id(globalNames.StoreConfigStruct),
+		append([]Code{
+			Id("db").Op("*").Qual("database/sql", "Conn"),
+			Id("config").Id(globalNames.StoreConfigStruct),
+			Line().Comment("Managers").Line(),
+		}, modelConfigs...)...,
 	)
 }
 

@@ -8,6 +8,7 @@ import (
 )
 
 type GeneratedModelNames struct {
+	ManagerAccessor     string
 	ManagerStruct       string
 	ManagerConstructor  string
 	QuerysetStruct      string
@@ -46,6 +47,7 @@ var globalNames = struct {
 
 func NamesForModel(modelName string) GeneratedModelNames {
 	return GeneratedModelNames{
+		ManagerAccessor:     PublicGoName(modelName + "s"),
 		ManagerStruct:       PublicGoName(modelName + "Manager"),
 		ManagerConstructor:  PublicGoName("New" + modelName + "Manager"),
 		QuerysetStruct:      PublicGoName(modelName + "Queryset"),
