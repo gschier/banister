@@ -108,9 +108,46 @@ func (g *QuerysetGenerator) AddUpdateMethod() {
 }
 
 func (g *QuerysetGenerator) AddAllMethod() {
+	selectStar := Id("query").Op(":=").Id("qs").Dot("starSelect").Call()
+
+	getSQL := Id("q").Op(",").Id("args").Op(":=").
+		Id("qs").Dot("toSQL").Call(Id("query"))
+
+	exec := Id("rows").Op(",").Err().Op(":=").Id("qs").Dot("mgr").Dot("db").Dot("Query").Call(
+		Id("q"),
+		Id("args").Op("..."),
+	)
+
+	checkErr := If(Err().Op("!=").Nil()).Block(
+		Return(Nil(), Err()),
+	)
+
+	deferClose := Defer().Id("rows").Dot("Close").Call()
+
+	defineResults := Id("items").Op(":=").Id("make").Call(
+		Index().Id(g.names().ModelStruct),
+		Lit(0),
+	)
+
+	mapResults := For(Id("rows").Dot("Next").Call()).Block(
+		Var().Id("m").Id(g.names().ModelStruct),
+		Err().Op("=").Id("qs").Dot("scan").Call(Id("rows"), Op("&").Id("m")),
+		checkErr,
+		Id("items").Op("=").Id("append").Call(Id("items"), Id("m")),
+	)
+
 	g.AddMethod("All",
 		[]Code{},
-		[]Code{Panic(Lit("implement me"))},
+		[]Code{
+			selectStar,
+			getSQL.Line(),
+			exec,
+			checkErr,
+			deferClose.Line(),
+			defineResults.Line(),
+			mapResults.Line(),
+			Return(Id("items"), Err()),
+		},
 		[]Code{Index().Id(g.names().ModelStruct), Error()},
 	)
 }

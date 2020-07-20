@@ -40,9 +40,11 @@ type GeneratedFieldNames struct {
 var globalNames = struct {
 	StoreStruct       string
 	StoreConfigStruct string
+	StoreConstructor  string
 }{
 	StoreStruct:       PublicGoName("Store"),
 	StoreConfigStruct: PublicGoName("StoreConfig"),
+	StoreConstructor:  PublicGoName("NewStore"),
 }
 
 func NamesForModel(modelName string) GeneratedModelNames {
