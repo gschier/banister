@@ -250,7 +250,19 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 		var castTo Code
 		var defaultValue Code
 
-		switch v := f.EmptyDefault().(type) {
+		goType := fmt.Sprintf("%T", f.EmptyDefault())
+		goDefaultVal := f.Settings().Default.Value
+
+		// If no default is provided and nil is not allowed, use the
+		// fallback default
+		if f.Settings().Null == false && goDefaultVal == nil {
+			goDefaultVal = f.EmptyDefault()
+		}
+
+		switch v := goDefaultVal.(type) {
+		case nil:
+			defaultValue = Nil()
+			castTo = Id(goType)
 		case time.Time:
 			defaultValue = Qual("time", "Time").Values()
 			castTo = Qual("time", "Time")
@@ -259,7 +271,6 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 			castTo = Qual("time", "Duration")
 		default:
 			defaultValue = Lit(v)
-			goType := fmt.Sprintf("%T", f.EmptyDefault())
 			castTo = Id(goType)
 		}
 
@@ -274,12 +285,11 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 		if f.Settings().Null {
 			newCase = Case(Lit(f.Settings().DBColumn)).Block(
 				If(
-					Id("s").Dot("value").Op("==").Nil(),
+					Id("s").Dot("value").Op("!=").Nil(),
 				).Block(
-					Id("m").Dot(f.Settings().Name).Op("=").Nil(),
+					Id("m").Dot(f.Settings().Name).Op("=").Id("s").Dot("value").Op(".").Params(castTo),
 				).Else().Block(
-					Id("m").Dot(f.Settings().Name).Op("=").
-						Id("s").Dot("value").Op(".").Params(castTo),
+					Id("m").Dot(f.Settings().Name).Op("=").Nil().Comment("Cannot cast nil"),
 				),
 			)
 		} else {
@@ -292,6 +302,11 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 		defaultValues[Id(f.Settings().Name)] = defaultValue
 		setterCases = append(setterCases, newCase)
 	}
+
+	// Add default case that panics
+	setterCases = append(setterCases, Default().Block(
+		Panic(Lit("invalid field for setter: ").Op("+").Id("s").Dot("field")),
+	))
 
 	instantiateWithDefaults := Id("m").Op(":=").
 		Id(g.names().ModelStruct).Values(defaultValues)

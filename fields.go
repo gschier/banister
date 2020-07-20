@@ -105,9 +105,30 @@ const (
 type FieldValidator func(v interface{}) error
 
 type Field interface {
-	Type() FieldType
-	RelType() FieldType
 	Settings() FieldSettings
+
+	// Type specifies the type of field, which indirectly maps to database
+	// column.
+	Type() FieldType
+
+	// RelType specifies the field type for FK's that need to reference this
+	// field.
+	//
+	// For example, FK's that reference an Auto field will be stored as
+	// Integer
+	RelType() FieldType
+
+	// EmptyDefault defines the default Go value to be used for non-pointer
+	// Go variables.
+	//
+	// For example, instantiating a model struct.
 	EmptyDefault() interface{}
+
+	// Operations specifies a list of queryset operations that can be
+	// performed on the field
+	//
+	// For example
+	//   - Integer will have >=, >, ==, etc
+	//   - Boolean will have ==, etc
 	Operations() []Operation
 }

@@ -6,7 +6,6 @@ import (
 
 type TestUser struct{}
 
-
 func TestUserModel() TestUser {
 	return TestUser{}
 }
@@ -45,7 +44,11 @@ func (u TestPost) Fields() []banister.Field {
 		banister.NewIntegerField("words").Build(),
 		banister.NewTextField("title").Default("Change Me").Build(),
 		banister.NewTextField("slug").Unique().Build(),
+		banister.NewTextField("subtitle").Null().Build(),
 		banister.NewTextField("content").Default("Fill me in").Build(),
 		banister.NewDateTimeField("created").Build(),
+		banister.NewBooleanField("deleted").Build(),
+		banister.NewBooleanField("approved").Null().Build(),
+		banister.NewBooleanField("private").Default(true).Build(),
 	}
 }
