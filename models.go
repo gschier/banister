@@ -25,3 +25,13 @@ type Model interface {
 	Settings() ModelSettings
 	Fields() []Field
 }
+
+func PrimaryKeyField(m Model) Field {
+	for _, f := range m.Fields() {
+		if f.Settings().PrimaryKey {
+			return f
+		}
+	}
+
+	panic("no primary key field for model: " + m.Settings().Name)
+}

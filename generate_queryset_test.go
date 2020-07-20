@@ -74,14 +74,14 @@ package dummy
 
 import squirrel "github.com/Masterminds/squirrel"
 
-func (qs *UserQueryset) Delete(m *User) error {
+func (qs *UserQueryset) Delete() error {
 	query := squirrel.Delete("users")
 
 	for _, w := range qs.filter {
 		query = query.Where(w.filter)
 	}
 
-	q, args := toSQL(query)
+	q, args := qs.toSQL(query)
 	_, err := qs.mgr.db.Exec(q, args...)
 	return err
 }

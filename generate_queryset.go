@@ -99,6 +99,38 @@ func (g *QuerysetGenerator) AddOffsetMethod() {
 	)
 }
 
+func (g *QuerysetGenerator) AddUpdateMethod() {
+	g.AddMethod("Update",
+		[]Code{Id("set").Op("...").Id(g.names().QuerysetSetterArgStruct)},
+		[]Code{Panic(Lit("implement me"))},
+		[]Code{Error()},
+	)
+}
+
+func (g *QuerysetGenerator) AddAllMethod() {
+	g.AddMethod("All",
+		[]Code{},
+		[]Code{Panic(Lit("implement me"))},
+		[]Code{Index().Id(g.names().ModelStruct), Error()},
+	)
+}
+
+func (g *QuerysetGenerator) AddOneMethod() {
+	g.AddMethod("One",
+		[]Code{},
+		[]Code{Panic(Lit("implement me"))},
+		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
+	)
+}
+
+func (g *QuerysetGenerator) AddCountMethod() {
+	g.AddMethod("Count",
+		[]Code{},
+		[]Code{Panic(Lit("implement me"))},
+		[]Code{Int(), Error()},
+	)
+}
+
 func (g *QuerysetGenerator) AddDeleteMethod() {
 	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Delete").Call(
 		Lit(g.Model.Settings().DBTable),
@@ -123,7 +155,7 @@ func (g *QuerysetGenerator) AddDeleteMethod() {
 		)
 
 	g.AddMethod("Delete",
-		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
+		[]Code{},
 		[]Code{
 			defineQuery.Line(),
 			applyFilters.Line(),
@@ -342,11 +374,11 @@ func (g *QuerysetGenerator) Generate() {
 	g.AddOrderMethod()
 	g.AddLimitMethod()
 	g.AddOffsetMethod()
-	// TODO: g.AddUpdateMethod()
-	// TODO: g.AddAllMethod()
-	// TODO: g.AddOneMethod()
+	g.AddUpdateMethod()
+	g.AddAllMethod()
+	g.AddOneMethod()
 	g.AddDeleteMethod()
-	// TODO: g.AddCountMethod()
+	g.AddCountMethod()
 	g.AddScanMethod()
 	g.AddStarSelectMethod()
 	g.AddToSQLMethod()
