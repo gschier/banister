@@ -67,6 +67,7 @@ func generateJen(c *GenerateConfig) map[string]*jen.File {
 		NewModelConfigGenerator(file(m.Settings().Names().ConfigStruct), m).Generate()
 		NewManagerGenerator(file(m.Settings().Names().ManagerStruct), m).Generate()
 		NewQuerysetGenerator(file(m.Settings().Names().QuerysetStruct), m).Generate()
+		NewSettersGenerator(file(m.Settings().Names().QuerysetSetterOptionsStruct), m).Generate()
 
 		filtersFile := file(m.Settings().Name + "Filters")
 		for _, f := range m.Fields() {

@@ -68,9 +68,9 @@ func (g *ManagerGenerator) AddAllMethod() {
 
 func (g *ManagerGenerator) AddInsertMethod() {
 	g.AddMethod("Insert",
-		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
+		[]Code{Id("set").Op("...").Id(g.names().QuerysetSetterArgStruct)},
 		[]Code{Panic(Lit("implement me"))},
-		[]Code{Error()},
+		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
 	)
 }
 

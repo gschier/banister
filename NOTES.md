@@ -27,8 +27,8 @@ General Notes
 To-Do
 -----
 
-- [ ] Generate global `Store` type
-- [ ] Generate model manager types
+- [x] Generate global `Store` type
+- [x] Generate model manager types
 - [ ] Generate model setters
 - [ ] Generate model orderBys
 - [ ] Create helper library for generated code to lean on

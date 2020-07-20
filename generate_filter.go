@@ -42,7 +42,7 @@ func (g *FilterGenerator) AddFilterMethod(name string, args *Statement, filter *
 	)
 }
 
-func (g *FilterGenerator) AddStructDef() {
+func (g *FilterGenerator) AddStruct() {
 	g.File.Type().Id(g.names().FilterOptionStruct).Struct(
 		Id("filters").Index().Qual("github.com/Masterminds/squirrel", "Sqlizer"),
 	)
@@ -84,7 +84,7 @@ func (g *FilterGenerator) AddSimpleSquirrelFilter(name, sqName string) {
 }
 
 func (g *FilterGenerator) Generate() {
-	g.AddStructDef()
+	g.AddStruct()
 	for _, op := range g.Field.Operations() {
 		switch op {
 		case Exact:

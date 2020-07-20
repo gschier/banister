@@ -54,13 +54,13 @@ func NamesForModel(modelName string) GeneratedModelNames {
 		ModelStruct:  PublicGoName(modelName),
 		ConfigStruct: PublicGoName(modelName + "Config"),
 
-		QuerysetFilterOptionsStruct:  PublicGoName(modelName + "QuerysetFilterOptions"),
-		QuerysetOrderByOptionsStruct: PublicGoName(modelName + "QuerysetOrderByOptions"),
-		QuerysetSetterOptionsStruct:  PublicGoName(modelName + "QuerysetSetterOptions"),
+		QuerysetFilterOptionsStruct:  PublicGoName(modelName + "Filters"),
+		QuerysetOrderByOptionsStruct: PublicGoName(modelName + "OrderBys"),
+		QuerysetSetterOptionsStruct:  PublicGoName(modelName + "Setters"),
 
-		QuerysetFilterArgStruct:  PrivateGoName(modelName + "QuerysetFilterArg"),
-		QuerysetOrderByArgStruct: PrivateGoName(modelName + "QuerysetOrderByArg"),
-		QuerysetSetterArgStruct:  PrivateGoName(modelName + "QuerysetSetterArg"),
+		QuerysetFilterArgStruct:  PrivateGoName(modelName + "FilterArg"),
+		QuerysetOrderByArgStruct: PrivateGoName(modelName + "OrderByArg"),
+		QuerysetSetterArgStruct:  PrivateGoName(modelName + "SetterArg"),
 
 		FilterOptionsVar:  PublicGoName("Where" + modelName),
 		OrderByOptionsVar: PublicGoName("OrderBy" + modelName),
