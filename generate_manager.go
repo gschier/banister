@@ -93,8 +93,8 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 	columns := make([]Code, 0)
 	values := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
-		columns = append(columns, Line().Lit(f.Settings().DBColumn))
-		values = append(values, Line().Op("m").Dot(f.Settings().Name))
+		columns = append(columns, Lit(f.Settings().DBColumn))
+		values = append(values, Op("m").Dot(f.Settings().Name))
 	}
 
 	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Insert").Call(
@@ -125,8 +125,8 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
 		[]Code{
 			callPreInsertHook.Line(),
-			defineQuery.Line(),
-			addColumns.Line(),
+			defineQuery,
+			addColumns,
 			addValues.Line(),
 			toSQL.Line(),
 			exec,
