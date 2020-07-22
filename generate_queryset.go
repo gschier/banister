@@ -129,8 +129,9 @@ func (g *QuerysetGenerator) AddUpdateMethod() {
 		Id("args").Op("..."),
 	)
 
-	g.AddMethod("Update",
+	g.AddMethodWithPanicVariant("Update",
 		[]Code{Id("set").Op("...").Id(g.names().QuerysetSetterArgStruct)},
+		[]Code{Id("set").Op("...")},
 		[]Code{
 			defineQuery.Line(),
 			mapSets.Line(),
@@ -172,7 +173,8 @@ func (g *QuerysetGenerator) AddAllMethod() {
 		Id("items").Op("=").Id("append").Call(Id("items"), Id("m")),
 	)
 
-	g.AddMethod("All",
+	g.AddMethodWithPanicVariant("All",
+		[]Code{},
 		[]Code{},
 		[]Code{
 			selectStar,
@@ -189,7 +191,8 @@ func (g *QuerysetGenerator) AddAllMethod() {
 }
 
 func (g *QuerysetGenerator) AddOneMethod() {
-	g.AddMethod("One",
+	g.AddMethodWithPanicVariant("One",
+		[]Code{},
 		[]Code{},
 		[]Code{Panic(Lit("implement me"))},
 		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
@@ -197,7 +200,8 @@ func (g *QuerysetGenerator) AddOneMethod() {
 }
 
 func (g *QuerysetGenerator) AddCountMethod() {
-	g.AddMethod("Count",
+	g.AddMethodWithPanicVariant("Count",
+		[]Code{},
 		[]Code{},
 		[]Code{Panic(Lit("implement me"))},
 		[]Code{Int(), Error()},
@@ -227,7 +231,8 @@ func (g *QuerysetGenerator) AddDeleteMethod() {
 			Id("args").Op("..."),
 		)
 
-	g.AddMethod("Delete",
+	g.AddMethodWithPanicVariant("Delete",
+		[]Code{},
 		[]Code{},
 		[]Code{
 			defineQuery.Line(),
@@ -378,6 +383,38 @@ func (g *QuerysetGenerator) AddMethod(name string, args, block, returns []Code) 
 		Params(args...).
 		Params(returns...).
 		Block(block...)
+}
+
+func (g *QuerysetGenerator) AddMethodWithPanicVariant(name string, args, panicArgs, block, returns []Code) {
+	g.AddMethod(name, args, block, returns)
+
+	// Now we're going to add a variant of the method that panics instead of
+	// returning an error
+
+	var (
+		panicVariantName          = name + "P"
+		callOriginalAndMaybePanic []Code
+		panicVariantReturns       []Code
+	)
+
+	if len(returns) == 1 {
+		// Original method only returned error, so only expect error back
+		panicVariantReturns = []Code{}
+		callOriginalAndMaybePanic = []Code{
+			Err().Op(":=").Id("mgr").Dot(name).Call(panicArgs...),
+			If(Err().Op("!=").Nil()).Block(Panic(Err())),
+		}
+	} else {
+		// Original method returned a value too, so handle that as well
+		panicVariantReturns = []Code{returns[0]}
+		callOriginalAndMaybePanic = []Code{
+			Id("v").Op(",").Err().Op(":=").Id("mgr").Dot(name).Call(panicArgs...),
+			If(Err().Op("!=").Nil()).Block(Panic(Err())),
+			Return(Id("v")),
+		}
+	}
+
+	g.AddMethod(panicVariantName, args, callOriginalAndMaybePanic, panicVariantReturns)
 }
 
 func (g *QuerysetGenerator) Generate() {

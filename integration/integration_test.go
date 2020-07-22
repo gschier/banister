@@ -14,52 +14,39 @@ import (
 func TestIntegrate(t *testing.T) {
 	t.Run("Inserts a record", func(t *testing.T) {
 		store, _ := createStore(t)
-		user, err := store.Users.Insert(Set.User.Username("another"))
-		assert.Nil(t, err)
+		user := store.Users.InsertP(Set.User.Username("another"))
 		assert.Equal(t, "another", user.Username)
 		assert.Equal(t, "another", user.Name, "hook should have worked")
 	})
 
 	t.Run("Filters and returns results", func(t *testing.T) {
 		store, _ := createStore(t)
-		_, _ = store.Users.Insert(Set.User.Username("kid"), Set.User.Age(11))
-		_, _ = store.Users.Insert(Set.User.Username("adult"), Set.User.Age(28))
+		_ = store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
+		_ = store.Users.InsertP(Set.User.Username("adult"), Set.User.Age(28))
 
-		users, err := store.Users.
+		users := store.Users.
 			Filter(Where.User.Age.Gt(100)).
 			Sort(OrderBy.User.Created.Asc).
-			All()
-		assert.Nil(t, err)
+			AllP()
 		assert.Equal(t, 0, len(users))
 
-		// B) More Dots 🔥
-		err = store.Users.
-			Filter(Where.User.Age.Gt(12)).
-			Sort(OrderBy.User.Age.Asc).
-			Update(Set.User.Name("Foo"))
-
-		users, err = store.Users.
+		users = store.Users.
 			Filter(Where.User.Age.Gt(20)).
 			Sort(OrderBy.User.Created.Desc).
-			All()
-		assert.Nil(t, err)
+			AllP()
 		assert.Equal(t, 2, len(users))
 
-		users, err = store.Users.All()
-		assert.Nil(t, err)
+		users = store.Users.AllP()
 		assert.Equal(t, 4, len(users))
 	})
 
 	t.Run("Deletes results", func(t *testing.T) {
 		store, _ := createStore(t)
-		user, err := store.Users.Insert(Set.User.Username("foo"), Set.User.Age(11))
-		assert.Nil(t, err)
+		user := store.Users.InsertP(Set.User.Username("foo"), Set.User.Age(11))
 
-		err = store.Users.Delete(user)
-		assert.Nil(t, err)
+		store.Users.DeleteP(user)
 
-		users, err := store.Users.Filter(Where.User.Username.Eq("foo")).All()
-		assert.Nil(t, err)
+		users := store.Users.Filter(Where.User.Username.Eq("foo")).AllP()
 		assert.Equal(t, 0, len(users))
 	})
 
@@ -67,11 +54,9 @@ func TestIntegrate(t *testing.T) {
 		store, user := createStore(t)
 
 		user.Name = "Baby"
-		err := store.Users.Update(user)
-		assert.Nil(t, err)
+		store.Users.UpdateP(user)
 
-		users, err := store.Users.All()
-		assert.Nil(t, err)
+		users := store.Users.AllP()
 		assert.Equal(t, 2, len(users))
 		assert.Equal(t, "Baby", user.Name)
 		assert.Equal(t, "Baby", users[0].Name, "should have updated in DB")
@@ -98,10 +83,8 @@ func createStore(t *testing.T) (*Store, *User) {
 	})
 
 	// Insert some dummy data
-	user, err := store.Users.Insert(Set.User.Username("gschier"), Set.User.Age(11))
-	assert.Nil(t, err)
-	_, err = store.Users.Insert(Set.User.Username("pupper"), Set.User.Age(21))
-	assert.Nil(t, err)
+	user := store.Users.InsertP(Set.User.Username("gschier"), Set.User.Age(11))
+	store.Users.InsertP(Set.User.Username("pupper"), Set.User.Age(21))
 
 	return store, user
 }

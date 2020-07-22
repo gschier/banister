@@ -19,6 +19,38 @@ func (g *ManagerGenerator) names() GeneratedModelNames {
 	return g.Model.Settings().Names()
 }
 
+func (g *ManagerGenerator) AddMethodWithPanicVariant(name string, args, panicArgs, block, returns []Code) {
+	g.AddMethod(name, args, block, returns)
+
+	// Now we're going to add a variant of the method that panics instead of
+	// returning an error
+
+	var (
+		panicVariantName          = name + "P"
+		callOriginalAndMaybePanic []Code
+		panicVariantReturns       []Code
+	)
+
+	if len(returns) == 1 {
+		// Original method only returned error, so only expect error back
+		panicVariantReturns = []Code{}
+		callOriginalAndMaybePanic = []Code{
+			Err().Op(":=").Id("mgr").Dot(name).Call(panicArgs...),
+			If(Err().Op("!=").Nil()).Block(Panic(Err())),
+		}
+	} else {
+		// Original method returned a value too, so handle that as well
+		panicVariantReturns = []Code{returns[0]}
+		callOriginalAndMaybePanic = []Code{
+			Id("v").Op(",").Err().Op(":=").Id("mgr").Dot(name).Call(panicArgs...),
+			If(Err().Op("!=").Nil()).Block(Panic(Err())),
+			Return(Id("v")),
+		}
+	}
+
+	g.AddMethod(panicVariantName, args, callOriginalAndMaybePanic, panicVariantReturns)
+}
+
 // AddMethod is a helper to add a struct method
 func (g *ManagerGenerator) AddMethod(name string, args, block, returns []Code) {
 	receiver := Id("mgr").Op("*").Id(g.names().ManagerStruct)
@@ -64,8 +96,9 @@ func (g *ManagerGenerator) AddDeleteMethod() {
 
 	checkErr := If(Err().Op("!=").Nil()).Block(Return(Err()))
 
-	g.AddMethod("Delete",
+	g.AddMethodWithPanicVariant("Delete",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
+		[]Code{Id("m")},
 		[]Code{
 			g.MaybeCallHook(globalNames.HookPreDelete).Line(),
 			Comment("Call delete on queryset with PK as the filter"),
@@ -79,7 +112,8 @@ func (g *ManagerGenerator) AddDeleteMethod() {
 }
 
 func (g *ManagerGenerator) AddAllMethod() {
-	g.AddMethod("All",
+	g.AddMethodWithPanicVariant("All",
+		[]Code{},
 		[]Code{},
 		[]Code{Return(Op("mgr").Dot("Filter").Call().Dot("All").Call())},
 		[]Code{Index().Id(g.names().ModelStruct), Error()},
@@ -90,8 +124,9 @@ func (g *ManagerGenerator) AddInsertMethod() {
 	createInstance := Id("m").Op(":=").Id("mgr").Dot("newModel").Call(Id("set").Op("..."))
 	insert := Err().Op(":=").Id("mgr").Dot("insertInstance").Call(Id("m"))
 	checkErr := If(Err().Op("!=").Nil()).Block(Return(Nil(), Err()))
-	g.AddMethod("Insert",
+	g.AddMethodWithPanicVariant("Insert",
 		[]Code{Id("set").Op("...").Id(g.names().QuerysetSetterArgStruct)},
+		[]Code{Id("set").Op("...")},
 		[]Code{
 			createInstance,
 			insert,
@@ -183,8 +218,9 @@ func (g *ManagerGenerator) AddUpdateMethod() {
 		}),
 	).Dot("Update").Call(setters...)
 
-	g.AddMethod("Update",
+	g.AddMethodWithPanicVariant("Update",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
+		[]Code{Id("m")},
 		[]Code{
 			g.MaybeCallHook(globalNames.HookPreUpdate).Line(),
 			Comment("Call update on queryset with PK as the filter"),
@@ -199,8 +235,9 @@ func (g *ManagerGenerator) AddUpdateMethod() {
 
 func (g *ManagerGenerator) AddGetMethod() {
 	pkGoType := fmt.Sprintf("%T", PrimaryKeyField(g.Model).EmptyDefault())
-	g.AddMethod("Get",
+	g.AddMethodWithPanicVariant("Get",
 		[]Code{Id("id").Id(pkGoType)},
+		[]Code{Id("id")},
 		[]Code{Panic(Lit("implement me"))},
 		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
 	)
