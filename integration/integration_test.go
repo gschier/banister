@@ -113,6 +113,18 @@ func TestIntegrate(t *testing.T) {
 		assert.Equal(t, false, users[1].Admin)
 		assert.EqualValues(t, 21, *users[1].Age)
 	})
+
+	t.Run("Bulk delete", func(t *testing.T) {
+		store, _ := createStore(t)
+
+		store.Users.Filter(
+			Where.User.Username.Eq("gschier"),
+		).DeleteP()
+
+		users := store.Users.AllP()
+		assert.Equal(t, 1, len(users))
+		assert.Equal(t, "pupper", users[0].Username)
+	})
 }
 
 func createStore(t *testing.T) (*Store, *User) {
