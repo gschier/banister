@@ -21,20 +21,18 @@ type GeneratedModelNames struct {
 	QuerysetOrderByArgStruct string
 	QuerysetSetterArgStruct  string
 
-	QuerysetFilterOptionsStruct  string
-	QuerysetOrderByOptionsStruct string
-	QuerysetSetterOptionsStruct  string
-
-	FilterOptionsVar  string
-	OrderByOptionsVar string
-	SetterOptionsVar  string
+	QuerysetFilterOptionsStruct       string
+	QuerysetOrderByOptionsStruct      string
+	QuerysetOrderByOptionsConstructor string
+	QuerysetSetterOptionsStruct       string
 }
 
 type GeneratedFieldNames struct {
-	FilterOptionStruct  string
-	OrderByOptionStruct string
-	SetterOptionStruct  string
-	QualifiedColumn     string
+	FilterOptionStruct             string
+	OrderByOptionStruct            string
+	SetterOptionStruct             string
+	QualifiedColumn                string
+	QuerysetOrderByDirectionStruct string
 }
 
 var globalNames = struct {
@@ -64,25 +62,22 @@ var globalNames = struct {
 func NamesForModel(modelName string) GeneratedModelNames {
 	return GeneratedModelNames{
 		ManagerAccessor:     PublicGoName(modelName + "s"),
-		ManagerStruct:       PublicGoName(modelName + "Manager"),
-		ManagerConstructor:  PublicGoName("New" + modelName + "Manager"),
-		QuerysetStruct:      PublicGoName(modelName + "Queryset"),
-		QuerysetConstructor: PublicGoName("New" + modelName + "Queryset"),
+		ManagerStruct:       PrivateGoName(modelName + "Manager"),
+		ManagerConstructor:  PrivateGoName("New" + modelName + "Manager"),
+		QuerysetStruct:      PrivateGoName(modelName + "Queryset"),
+		QuerysetConstructor: PrivateGoName("New" + modelName + "Queryset"),
 
 		ModelStruct:  PublicGoName(modelName),
 		ConfigStruct: PublicGoName(modelName + "Config"),
 
-		QuerysetFilterOptionsStruct:  PublicGoName(modelName + "Filters"),
-		QuerysetOrderByOptionsStruct: PublicGoName(modelName + "OrderBys"),
-		QuerysetSetterOptionsStruct:  PublicGoName(modelName + "Setters"),
+		QuerysetFilterOptionsStruct:       PrivateGoName(modelName + "Filters"),
+		QuerysetOrderByOptionsStruct:      PrivateGoName(modelName + "OrderBys"),
+		QuerysetOrderByOptionsConstructor: PrivateGoName("new" + modelName + "OrderBys"),
+		QuerysetSetterOptionsStruct:       PrivateGoName(modelName + "Setters"),
 
 		QuerysetFilterArgStruct:  PrivateGoName(modelName + "FilterArg"),
 		QuerysetOrderByArgStruct: PrivateGoName(modelName + "OrderByArg"),
 		QuerysetSetterArgStruct:  PrivateGoName(modelName + "SetterArg"),
-
-		FilterOptionsVar:  PublicGoName("Where" + modelName),
-		OrderByOptionsVar: PublicGoName("Sort" + modelName),
-		SetterOptionsVar:  PublicGoName("Set" + modelName),
 	}
 }
 
@@ -91,9 +86,10 @@ func NamesForField(modelSettings ModelSettings, fieldSettings FieldSettings) Gen
 	fieldName := fieldSettings.Name
 
 	return GeneratedFieldNames{
-		FilterOptionStruct:  PublicGoName(modelName + fieldName + "Filter"),
-		OrderByOptionStruct: PublicGoName(modelName + fieldName + "OrderBy"),
-		SetterOptionStruct:  PublicGoName(modelName + fieldName + "Setter"),
+		FilterOptionStruct:             PrivateGoName(modelName + fieldName + "Filter"),
+		OrderByOptionStruct:            PrivateGoName(modelName + fieldName + "OrderBy"),
+		SetterOptionStruct:             PrivateGoName(modelName + fieldName + "Setter"),
+		QuerysetOrderByDirectionStruct: PrivateGoName(modelName + fieldName + "OrderByArg"),
 
 		QualifiedColumn: fmt.Sprintf(
 			`"%s"."%s"`,

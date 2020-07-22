@@ -13,13 +13,6 @@ type Backend interface {
 	QuoteValue(value interface{}) string
 }
 
-type driverType string
-
-const (
-	Postgres driverType = "postgres"
-	SQLite              = "sqlite3"
-)
-
 type DBOperations struct {
 	CreateTable  string
 	CreateColumn string
@@ -38,6 +31,5 @@ func GetBackend(driver string) Backend {
 		return b
 	}
 
-	panic("backend not found for driver: " + driver + "\n" +
-		"  Did you forget to import it?")
+	panic("backend not found for driver: " + driver + "\n  Did you forget to import it?")
 }

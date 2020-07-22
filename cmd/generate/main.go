@@ -7,8 +7,8 @@ import (
 
 func main() {
 	config := &banister.GenerateConfig{
-		OutputDir:   "./generate",
-		PackageName: "generate",
+		OutputDir:   "./integration/generated",
+		PackageName: "gen",
 		MultiFile:   true,
 		Models: []banister.Model{
 			testutil.TestUserModel(),

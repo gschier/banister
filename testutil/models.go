@@ -12,7 +12,7 @@ func TestUserModel() TestUser {
 
 func (u TestUser) Settings() banister.ModelSettings {
 	s := &banister.ModelSettings{Name: "User"}
-	s.Fix()
+	s.FillDefaults()
 	return *s
 }
 
@@ -34,7 +34,7 @@ func TestPostModel() TestPost {
 
 func (u TestPost) Settings() banister.ModelSettings {
 	s := &banister.ModelSettings{Name: "Post"}
-	s.Fix()
+	s.FillDefaults()
 	return *s
 }
 

@@ -83,16 +83,13 @@ func (g *FilterGenerator) AddFilterOptionsStruct() {
 		fieldName := f.Settings().Name
 		fieldType := f.Settings().Names(g.Model).FilterOptionStruct
 		fields = append(fields, Id(fieldName).Id(fieldType))
-
-		// Don't need values because non-pointer fields will be explicitly
-		// created
-		// values[Id(fieldName)] = Id(fieldType).Values()
+		values[Id(fieldName)] = Id(fieldType).Values()
 	}
 
 	// Define options struct and instantiate an instance inline, so we
 	// don't clutter the scope with unnecessary type.
-	g.File.Var().Id(g.Model.Settings().Names().FilterOptionsVar).Op("=").
-		Struct(fields...).Values(values)
+	structName := g.Model.Settings().Names().QuerysetFilterOptionsStruct
+	g.File.Type().Id(structName).Struct(fields...)
 }
 
 func (g *FilterGenerator) Generate() {

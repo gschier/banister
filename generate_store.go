@@ -71,8 +71,47 @@ func (g *StoreGenerator) AddConfigStruct() {
 	)
 }
 
+func (g *StoreGenerator) AddGlobalWhere() {
+	fields := make([]Code, 0)
+	for _, m := range g.Models {
+		structName := m.Settings().Names().QuerysetFilterOptionsStruct
+		fields = append(fields, Id(m.Settings().Name).Id(structName))
+	}
+	g.File.Comment("Where contains helpers that can be used with Filter(...)")
+	g.File.Var().Id("Where").Op("=").Struct(fields...).Values()
+}
+
+func (g *StoreGenerator) AddGlobalSetters() {
+	fields := make([]Code, 0)
+	for _, m := range g.Models {
+		structName := m.Settings().Names().QuerysetSetterOptionsStruct
+		fields = append(fields, Id(m.Settings().Name).Id(structName))
+	}
+
+	g.File.Comment("Set contains helpers that can be used with Update(...) or Insert(...)")
+	g.File.Var().Id("Set").Op("=").Struct(fields...).Values()
+}
+
+func (g *StoreGenerator) AddGlobalOrderBys() {
+	fields := make([]Code, 0)
+	values := Dict{}
+
+	for _, m := range g.Models {
+		names := m.Settings().Names()
+		fields = append(fields, Id(m.Settings().Name).Id(names.QuerysetOrderByOptionsStruct))
+		values[Id(m.Settings().Name)] = Id(names.QuerysetOrderByOptionsConstructor).Call()
+	}
+
+	g.File.Comment("OrderBy contains values that can be passed to OrderBy(...)")
+	g.File.Var().Id("OrderBy").Op("=").Struct(fields...).Values(values)
+}
+
 func (g *StoreGenerator) Generate() {
 	g.AddStruct()
 	g.AddConstructor()
 	g.AddConfigStruct()
+
+	g.AddGlobalWhere()
+	g.AddGlobalSetters()
+	g.AddGlobalOrderBys()
 }

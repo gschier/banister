@@ -27,12 +27,15 @@ func (g *ModelGenerator) FieldStmt(f Field) Code {
 
 	segments := strings.SplitN(goType, ".", 2)
 
-	if len(segments) == 1 {
-		return Id(f.Settings().Name).Id(goType)
+	// Add import for types that require packages like time.Time
+	var field *Statement
+	if len(segments) == 2 {
+		field = Id(f.Settings().Name).Qual(segments[0], segments[1])
+	} else {
+		field = Id(f.Settings().Name).Id(goType)
 	}
 
-	// Add import for types that require packages like time.Time
-	return Id(f.Settings().Name).Qual(segments[0], segments[1])
+	return field.Tag(map[string]string{"json": f.Settings().JSONName})
 }
 
 func (g *ModelGenerator) AddJSONMethod() {
@@ -46,30 +49,34 @@ func (g *ModelGenerator) AddJSONMethod() {
 	).Block(
 		List(Id("b"), Err()).Op(":=").Qual("encoding/json", "MarshalIndent").Call(
 			Id("model"),
-			Lit(""),
+			Lit("// "),
 			Lit("  "),
 		),
 		If(Parens(Err().Op("!=").Nil())).Block(Panic(Err())),
 		Qual("fmt", "Printf").Call(
-			Lit("%T: %s"),
+			Lit("\n// var %s %T = %s\n\n"),
+			Lit(PrivateGoName(g.Model.Settings().Name)),
 			Id("model"),
 			Id("b"),
 		),
 	)
 }
 
-func (g *ModelGenerator) Generate() {
+func (g *ModelGenerator) AddStruct() {
 	// Generate the struct field definitions
 	fields := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
 		fields = append(fields, g.FieldStmt(f))
 	}
 
-	// Define the struct with its fields
-	g.File.Comment(
-		"// " + g.names().ModelStruct + " is a database model which represents a single row from the \n" +
-			"// " + g.Model.Settings().DBTable + " database table")
-	g.File.Type().Id(g.names().ModelStruct).Struct(fields...)
+	name := g.names().ModelStruct
+	comment := "// " + name + " is a database model which represents a single row from the \n" +
+		"// " + g.Model.Settings().DBTable + " database table"
 
+	g.File.Comment(comment).Line().Type().Id(g.names().ModelStruct).Struct(fields...)
+}
+
+func (g *ModelGenerator) Generate() {
+	g.AddStruct()
 	g.AddJSONMethod()
 }

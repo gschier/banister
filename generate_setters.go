@@ -20,14 +20,12 @@ func (g *SettersGenerator) names() GeneratedModelNames {
 }
 
 // AddMethod is a helper to add a struct method
-func (g *SettersGenerator) AddMethod(name string, args []Code, block []Code, returns []Code) {
+func (g *SettersGenerator) AddMethod(name string, args, block, returns []Code) {
 	receiver := Id("qs").Id(g.names().QuerysetSetterOptionsStruct)
-	g.File.Func().Params(receiver).Id(name).Params(args...).Params(returns...).Block(block...)
-}
-
-func (g *SettersGenerator) AddInstanceVar() {
-	g.File.Var().Id(g.names().SetterOptionsVar).Op("=").
-		Id(g.names().QuerysetSetterOptionsStruct).Values()
+	g.File.Func().Params(receiver).Id(name).
+		Params(args...).
+		Params(returns...).
+		Block(block...)
 }
 
 func (g *SettersGenerator) AddSetterMethod(f Field) {
@@ -50,16 +48,15 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 		assignTo = Id("v")
 	}
 
+	// Instantiate the setter
+	setterDef := Id(g.names().QuerysetSetterArgStruct).Values(Dict{
+		Id("field"): Lit(f.Settings().DBColumn),
+		Id("value"): assignTo,
+	})
+
 	g.AddMethod(f.Settings().Name,
 		[]Code{defineGoType},
-		[]Code{
-			Return(
-				Id(g.names().QuerysetSetterArgStruct).Values(Dict{
-					Id("field"): Lit(strings.ReplaceAll(f.Settings().DBColumn, `"`, `\"`)),
-					Id("value"): assignTo,
-				}),
-			),
-		},
+		[]Code{Return(setterDef)},
 		[]Code{Id(g.names().QuerysetSetterArgStruct)},
 	)
 }
@@ -69,5 +66,4 @@ func (g *SettersGenerator) Generate() {
 	for _, f := range g.Model.Fields() {
 		g.AddSetterMethod(f)
 	}
-	g.AddInstanceVar()
 }

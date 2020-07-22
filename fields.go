@@ -13,6 +13,7 @@ type FieldSettings struct {
 	Choices      *map[string]interface{}
 	DBColumn     string
 	DBTablespace string
+	JSONName     string
 	Validators   []FieldValidator
 
 	// MaxLength specifies the length of a char field
@@ -28,22 +29,14 @@ func (s *FieldSettings) Fix() {
 	if s.DBColumn == "" {
 		s.DBColumn = DBName(s.Name)
 	}
+
+	if s.JSONName == "" {
+		s.JSONName = JSONName(s.Name)
+	}
 }
 
 func (s FieldSettings) Names(model Model) GeneratedFieldNames {
 	return NamesForField(model.Settings(), s)
-}
-
-func (s FieldSettings) GenFilterStructName(modelName string) string {
-	return PrivateGoName(modelName + s.Name + "Filter")
-}
-
-func (s FieldSettings) GenOrderStructName(modelName string) string {
-	return PrivateGoName(modelName + s.Name + "OrderBy")
-}
-
-func (s FieldSettings) GenSetStructName(modelName string) string {
-	return PrivateGoName(modelName + s.Name + "Set")
 }
 
 type DefaultValue struct {

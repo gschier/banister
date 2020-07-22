@@ -20,9 +20,12 @@ func (g *ManagerGenerator) names() GeneratedModelNames {
 }
 
 // AddMethod is a helper to add a struct method
-func (g *ManagerGenerator) AddMethod(name string, args []Code, block []Code, returns []Code) {
+func (g *ManagerGenerator) AddMethod(name string, args, block, returns []Code) {
 	receiver := Id("mgr").Op("*").Id(g.names().ManagerStruct)
-	g.File.Func().Params(receiver).Id(name).Params(args...).Params(returns...).Block(block...)
+	g.File.Func().Params(receiver).Id(name).
+		Params(args...).
+		Params(returns...).
+		Block(block...)
 }
 
 func (g *ManagerGenerator) AddStruct() {

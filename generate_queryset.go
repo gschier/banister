@@ -66,8 +66,8 @@ func (g *QuerysetGenerator) AddFilterMethod() {
 	)
 }
 
-func (g *QuerysetGenerator) AddOrderByMethod() {
-	g.AddChainedMethod("OrderBy",
+func (g *QuerysetGenerator) AddSortMethod() {
+	g.AddChainedMethod("Sort",
 		[]Code{Id("orderBy").Op("...").Id(g.names().QuerysetOrderByArgStruct)},
 		[]Code{
 			Id("qs").Dot("orderBy").Op("=").Id("append").Params(
@@ -100,9 +100,9 @@ func (g *QuerysetGenerator) AddOffsetMethod() {
 }
 
 func (g *QuerysetGenerator) AddUpdateMethod() {
-	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Update").Call(
-		Lit(g.Model.Settings().DBTable),
-	)
+	defineQuery := Id("query").Op(":=").
+		Qual("github.com/Masterminds/squirrel", "Update").
+		Call(Lit(g.Model.Settings().DBTable))
 
 	mapSets := Comment("Apply setters to query").Line().For(
 		Op("_").Op(",").Id("s").Op(":=").Range().Id("set"),
@@ -205,9 +205,9 @@ func (g *QuerysetGenerator) AddCountMethod() {
 }
 
 func (g *QuerysetGenerator) AddDeleteMethod() {
-	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Delete").Call(
-		Lit(g.Model.Settings().DBTable),
-	)
+	defineQuery := Id("query").Op(":=").
+		Qual("github.com/Masterminds/squirrel", "Delete").
+		Call(Lit(g.Model.Settings().DBTable))
 
 	applyFilters := For(
 		Op("_").Op(",").Id("w").Op(":=").Range().Id("qs").Dot("filter"),
@@ -276,26 +276,13 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 		selectArgs = append(selectArgs, Line().Lit(name))
 	}
 
-	// query := squirrel.Select(...).From(...)
 	defineQuery := Id("query").Op(":=").
 		Qual("github.com/Masterminds/squirrel", "Select").Call(selectArgs...).
 		Dot("From").Call(Lit(g.Model.Settings().DBTable))
 
-	// joinCheck := make(map[string]bool)
 	defineJoinCheck := Id("joinCheck").Op(":=").
 		Id("make").Call(Id("map").Index(String()).Bool())
 
-	// Loop through things and add joins
-	// for _, w := range f.filters {
-	//   query = query.Where(w.filter)
-	//   for _, j := range w.joins {
-	//     if _, ok := joinCheck[j]; ok {
-	//       continue
-	//     }
-	//     joinCheck[j] = true
-	//     query = query.Join(j)
-	//   }
-	// }
 	loopAndJoin := Comment("Assign filters and join if necessary").Line().For(
 		Op("_").Op(",").Id("w").Op(":=").Range().Id("qs").Dot("filter"),
 	).Block(
@@ -305,11 +292,11 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 		For(
 			Op("_").Op(",").Id("j").Op(":=").Range().Id("w").Dot("joins"),
 		).Block(
-			If(Op("_").Op(",").Id("ok").Op(":=").
-				Id("joinCheck").Index(Id("j")).Op(";").Id("ok")).
-				Block(
-					Continue(),
-				),
+			If(
+				Op("_").Op(",").Id("ok").Op(":=").Id("joinCheck").Index(Id("j")).Op(";").Id("ok"),
+			).Block(
+				Continue(),
+			),
 			Id("joinCheck").Index(Id("j")).Op("=").True(),
 			Id("query").Op("=").Id("query").Dot("Join").Call(Id("j")),
 		),
@@ -333,12 +320,6 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 		),
 	)
 
-	// Apply default sorts
-	// if len(f.sorts) == 0 {
-	//	 return query.OrderBy(
-	//	`  "UsersOverride"."created" DESC`,
-	//	 )
-	// }
 	applyDefaultOrder := Comment("Apply default order if none specified").Line().If(
 		Id("len").Call(Id("qs").Dot("orderBy")).Op("==").Lit(0),
 	).Block(
@@ -347,21 +328,6 @@ func (g *QuerysetGenerator) AddStarSelectMethod() {
 		//  jen.Return(...),
 	)
 
-	// // Apply user-specified sorts
-	// for _, s := range f.sorts {
-	//   query = query.OrderBy(s.field + " " + s.order)
-	//   if s.join == "" {
-	//     continue
-	//   }
-	//
-	//   // Have we already added this join to the query?
-	// 	 if _, ok := joinCheck[s.join]; ok {
-	// 	   continue
-	// 	 }
-	//
-	//   joinCheck[s.join] = true
-	//   query = query.Join(s.join)
-	// }
 	applyOrderBy := Comment("Apply user-specified order").Line().For(
 		Op("_").Op(",").Id("s").Op(":=").Range().Id("qs").Dot("orderBy"),
 	).Block(
@@ -400,15 +366,18 @@ func (g *QuerysetGenerator) AddStruct() {
 
 // AddChainedMethod is a helper to add a struct method that returns an instance
 // of the struct for chaining.
-func (g *QuerysetGenerator) AddChainedMethod(name string, args []Code, block []Code) {
+func (g *QuerysetGenerator) AddChainedMethod(name string, args, block []Code) {
 	returnType := Op("*").Id(g.names().QuerysetStruct)
 	g.AddMethod(name, args, block, []Code{returnType})
 }
 
 // AddMethod is a helper to add a struct method
-func (g *QuerysetGenerator) AddMethod(name string, args []Code, block []Code, returns []Code) {
+func (g *QuerysetGenerator) AddMethod(name string, args, block, returns []Code) {
 	receiver := Id("qs").Op("*").Id(g.names().QuerysetStruct)
-	g.File.Func().Params(receiver).Id(name).Params(args...).Params(returns...).Block(block...)
+	g.File.Func().Params(receiver).Id(name).
+		Params(args...).
+		Params(returns...).
+		Block(block...)
 }
 
 func (g *QuerysetGenerator) Generate() {
@@ -418,7 +387,7 @@ func (g *QuerysetGenerator) Generate() {
 
 	// Methods
 	g.AddFilterMethod()
-	g.AddOrderByMethod()
+	g.AddSortMethod()
 	g.AddLimitMethod()
 	g.AddOffsetMethod()
 	g.AddUpdateMethod()
