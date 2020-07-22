@@ -234,11 +234,21 @@ func (g *ManagerGenerator) AddUpdateMethod() {
 }
 
 func (g *ManagerGenerator) AddGetMethod() {
-	pkGoType := fmt.Sprintf("%T", PrimaryKeyField(g.Model).EmptyDefault())
+	pk := PrimaryKeyField(g.Model)
+	pkGoType := fmt.Sprintf("%T", pk.EmptyDefault())
+
+	eqDef := Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
+		Lit(pk.Settings().Names(g.Model).QualifiedColumn): Id("id"),
+	})
+
+	callFilterAndOne := Id("mgr").Dot("Filter").Call(
+		Id(g.names().QuerysetFilterArgStruct).Values(Dict{Id("filter"): eqDef}),
+	).Dot("One").Call()
+
 	g.AddMethodWithPanicVariant("Get",
 		[]Code{Id("id").Id(pkGoType)},
 		[]Code{Id("id")},
-		[]Code{Panic(Lit("implement me"))},
+		[]Code{Return(callFilterAndOne)},
 		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
 	)
 }
