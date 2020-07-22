@@ -34,31 +34,56 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 	segments := strings.SplitN(goType, ".", 2)
 	var defineGoType *Statement
 	if len(segments) == 2 {
-		defineGoType = Id("v").Qual(segments[0], segments[1])
+		defineGoType = Qual(segments[0], segments[1])
 	} else {
-		defineGoType = Id("v").Id(segments[0])
+		defineGoType = Id(segments[0])
 	}
 
-	// Create assign statement, depending if the value is nullable
-	// or not
-	var assignTo *Statement
+	// Create assign statement, depending if the value is nullable or not
+	var valueDef *Statement
+
 	if f.Settings().Null {
-		assignTo = Op("&").Id("v")
+		valueDef = Op("&").Id("v")
 	} else {
-		assignTo = Id("v")
+		valueDef = Id("v")
 	}
-
-	// Instantiate the setter
-	setterDef := Id(g.names().QuerysetSetterArgStruct).Values(Dict{
-		Id("field"): Lit(f.Settings().DBColumn),
-		Id("value"): assignTo,
-	})
 
 	g.AddMethod(f.Settings().Name,
-		[]Code{defineGoType},
-		[]Code{Return(setterDef)},
+		[]Code{Id("v").Add(defineGoType)},
+		[]Code{
+			Return(Id(g.names().QuerysetSetterArgStruct).Values(Dict{
+				Id("field"): Lit(f.Settings().DBColumn),
+				Id("value"): valueDef,
+			})),
+		},
 		[]Code{Id(g.names().QuerysetSetterArgStruct)},
 	)
+
+	// Add option to set ptr if nullable field
+	if f.Settings().Null {
+		g.AddMethod(f.Settings().Name+"Ptr",
+			[]Code{Id("v").Op("*").Add(defineGoType)},
+			[]Code{
+				Return(Id(g.names().QuerysetSetterArgStruct).Values(Dict{
+					Id("field"): Lit(f.Settings().DBColumn),
+					Id("value"): Id("v"),
+				})),
+			},
+			[]Code{Id(g.names().QuerysetSetterArgStruct)},
+		)
+
+		// Add no-arg method to set to Null
+		g.AddMethod(f.Settings().Name+"Null",
+			[]Code{},
+			[]Code{
+				Return(Id(g.names().QuerysetSetterArgStruct).Values(Dict{
+					Id("field"): Lit(f.Settings().DBColumn),
+					Id("value"): Nil(),
+				})),
+			},
+			[]Code{Id(g.names().QuerysetSetterArgStruct)},
+		)
+	}
 }
 
 func (g *SettersGenerator) Generate() {

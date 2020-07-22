@@ -83,7 +83,7 @@ func TestIntegrate(t *testing.T) {
 		assert.Equal(t, 0, len(users))
 	})
 
-	t.Run("Updates results", func(t *testing.T) {
+	t.Run("Updates single", func(t *testing.T) {
 		store, user := createStore(t)
 
 		user.Name = "Baby"
@@ -93,6 +93,25 @@ func TestIntegrate(t *testing.T) {
 		assert.Equal(t, 2, len(users))
 		assert.Equal(t, "Baby", user.Name)
 		assert.Equal(t, "Baby", users[0].Name, "should have updated in DB")
+	})
+
+	t.Run("Updates multiple", func(t *testing.T) {
+		store, _ := createStore(t)
+
+		store.Users.Filter(
+			Where.User.Username.Eq("gschier"),
+		).UpdateP(
+			Set.User.AgeNull(),
+			Set.User.Admin(true),
+		)
+
+		users := store.Users.AllP()
+		assert.Equal(t, "gschier", users[0].Username)
+		assert.Equal(t, true, users[0].Admin)
+		assert.Nil(t, users[0].Age)
+
+		assert.Equal(t, false, users[1].Admin)
+		assert.EqualValues(t, 21, *users[1].Age)
 	})
 }
 
