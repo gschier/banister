@@ -71,8 +71,8 @@ func NamesForModel(modelName string) GeneratedModelNames {
 		ConfigStruct: PublicGoName(modelName + "Config"),
 
 		QuerysetFilterOptionsStruct:       PrivateGoName(modelName + "Filters"),
-		QuerysetOrderByOptionsStruct:      PrivateGoName(modelName + "OrderBys"),
-		QuerysetOrderByOptionsConstructor: PrivateGoName("new" + modelName + "OrderBys"),
+		QuerysetOrderByOptionsStruct:      PrivateGoName(modelName + "Orders"),
+		QuerysetOrderByOptionsConstructor: PrivateGoName("new" + modelName + "Orders"),
 		QuerysetSetterOptionsStruct:       PrivateGoName(modelName + "Setters"),
 
 		QuerysetFilterArgStruct:  PrivateGoName(modelName + "FilterArg"),

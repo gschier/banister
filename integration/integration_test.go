@@ -21,8 +21,8 @@ func TestIntegrate(t *testing.T) {
 
 	t.Run("Filters and returns results", func(t *testing.T) {
 		store, _ := createStore(t)
-		_ = store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
-		_ = store.Users.InsertP(Set.User.Username("adult"), Set.User.Age(28))
+		store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
+		store.Users.InsertP(Set.User.Username("adult"), Set.User.Age(28))
 
 		users := store.Users.
 			Filter(Where.User.Age.Gt(100)).
@@ -72,6 +72,7 @@ func createStore(t *testing.T) (*Store, *User) {
 		testutil.TestUserModel(),
 	))
 	assert.Nil(t, err, "tables should be created")
+
 	store := NewStore(db, StoreConfig{
 		UserConfig: UserConfig{
 			HookPreInsert: func(m *User) {

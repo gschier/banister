@@ -60,20 +60,17 @@ func generateJen(c *GenerateConfig) map[string]*jen.File {
 		files[name] = f
 		return f
 	}
-	mFile := func(name string) *jen.File {
-		return file("model_" + name)
-	}
 
 	// Generate things per model
 	NewStoreGenerator(file(globalNames.StoreStruct), c.Models).Generate()
 	for _, m := range c.Models {
-		NewModelGenerator(mFile(m.Settings().Names().ModelStruct), m).Generate()
-		NewModelConfigGenerator(mFile(m.Settings().Names().ConfigStruct), m).Generate()
-		NewManagerGenerator(mFile(m.Settings().Names().ManagerStruct), m).Generate()
-		NewQuerysetGenerator(mFile(m.Settings().Names().QuerysetStruct), m).Generate()
-		NewSettersGenerator(mFile(m.Settings().Names().QuerysetSetterOptionsStruct), m).Generate()
-		NewOrderBysGenerator(mFile(m.Settings().Names().QuerysetOrderByOptionsStruct), m).Generate()
-		NewFilterGenerator(mFile(m.Settings().Names().QuerysetFilterOptionsStruct), m).Generate()
+		NewModelGenerator(file(m.Settings().Names().ModelStruct+"Model"), m).Generate()
+		NewModelConfigGenerator(file(m.Settings().Names().ConfigStruct), m).Generate()
+		NewManagerGenerator(file(m.Settings().Names().ManagerStruct), m).Generate()
+		NewQuerysetGenerator(file(m.Settings().Names().QuerysetStruct), m).Generate()
+		NewSettersGenerator(file(m.Settings().Names().QuerysetSetterOptionsStruct), m).Generate()
+		NewOrderBysGenerator(file(m.Settings().Names().QuerysetOrderByOptionsStruct), m).Generate()
+		NewFilterGenerator(file(m.Settings().Names().QuerysetFilterOptionsStruct), m).Generate()
 	}
 
 	return files
