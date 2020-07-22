@@ -25,7 +25,7 @@ func (g *StoreGenerator) AddStruct() {
 		append([]Code{
 			Id("db").Op("*").Qual("database/sql", "DB"),
 			Id("config").Id(globalNames.StoreConfigStruct),
-			Line().Comment("Managers").Line(),
+			Line().Comment("Model managers").Line(),
 		}, modelConfigs...)...,
 	)
 }
@@ -57,7 +57,8 @@ func (g *StoreGenerator) AddConfigStruct() {
 	modelConfigs := make([]Code, 0)
 	for _, m := range g.Models {
 		name := m.Settings().Names().ConfigStruct
-		modelConfigs = append(modelConfigs, Id(name).Id(m.Settings().Names().ConfigStruct))
+		configDef := Id(name).Id(m.Settings().Names().ConfigStruct)
+		modelConfigs = append(modelConfigs, configDef)
 	}
 
 	g.File.Type().Id(globalNames.StoreConfigStruct).Struct(
@@ -97,9 +98,10 @@ func (g *StoreGenerator) AddGlobalOrderBys() {
 	values := Dict{}
 
 	for _, m := range g.Models {
+		name := m.Settings().Name
 		names := m.Settings().Names()
-		fields = append(fields, Id(m.Settings().Name).Id(names.QuerysetOrderByOptionsStruct))
-		values[Id(m.Settings().Name)] = Id(names.QuerysetOrderByOptionsConstructor).Call()
+		fields = append(fields, Id(name).Id(names.QuerysetOrderByOptionsStruct))
+		values[Id(name)] = Id(names.QuerysetOrderByOptionsConstructor).Call()
 	}
 
 	g.File.Comment("OrderBy contains values that can be passed to OrderBy(...)")
