@@ -25,8 +25,14 @@ func (f AutoField) EmptyDefault() interface{} {
 	return int64(0)
 }
 
-func (f AutoField) Operations() []Operation {
-	return []Operation{Exact, Lt, Lte, Gt, Gte}
+func (f AutoField) Operations() map[Operation]string {
+	return map[Operation]string{
+		Exact: "Eq",
+		Lt:    "Lt",
+		Lte:   "Lte",
+		Gt:    "Gt",
+		Gte:   "Gte",
+	}
 }
 
 func (f AutoField) Settings() FieldSettings {

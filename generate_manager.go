@@ -257,7 +257,7 @@ func (g *ManagerGenerator) AddOrMethod() {
 	g.AddMethod("Or",
 		[]Code{Id("filter").Op("...").Id(g.names().QuerysetFilterArgStruct)},
 		[]Code{Panic(Lit("implement me"))},
-		[]Code{Op("*").Id(g.names().QuerysetStruct)},
+		[]Code{Id(g.names().QuerysetFilterArgStruct)},
 	)
 }
 
@@ -265,7 +265,7 @@ func (g *ManagerGenerator) AddAndMethod() {
 	g.AddMethod("And",
 		[]Code{Id("filter").Op("...").Id(g.names().QuerysetFilterArgStruct)},
 		[]Code{Panic(Lit("implement me"))},
-		[]Code{Op("*").Id(g.names().QuerysetStruct)},
+		[]Code{Id(g.names().QuerysetFilterArgStruct)},
 	)
 }
 

@@ -28,16 +28,17 @@ func (g *FilterGenerator) goType(f Field) string {
 }
 
 func (g *FilterGenerator) AddFilterMethod(f Field, name string, args *Statement, filter *Statement) {
-	g.File.Func().Params(
-		Id("filter").Op("*").Id(g.names(f).FilterOptionStruct),
-	).Id(name).Params(
-		args,
-	).Params(Id(g.modelNames().QuerysetFilterArgStruct)).Block(
-		Return(
-			Id(g.modelNames().QuerysetFilterArgStruct).Values(Dict{
-				Id("filter"): filter,
-			}),
-		),
+	createFilter := Return(
+		Id(g.modelNames().QuerysetFilterArgStruct).Values(Dict{
+			Id("filter"): filter,
+		}),
+	)
+
+	g.AddMethodField(f,
+		name,
+		[]Code{args},
+		[]Code{createFilter},
+		[]Code{Id("filter").Id(g.modelNames().QuerysetFilterArgStruct)},
 	)
 }
 
@@ -45,13 +46,20 @@ func (g *FilterGenerator) AddStruct(f Field) {
 	g.File.Type().Id(g.names(f).FilterOptionStruct).Struct()
 }
 
-func (g *FilterGenerator) SqExpr(op Operation) *Statement {
-	switch op {
-	case Exact:
+func (g *FilterGenerator) AddMethodField(f Field, name string, args, block, returns []Code) {
+	receiver := Id(g.names(f).FilterOptionStruct)
+	g.File.Func().Params(receiver).Id(name).
+		Params(args...).
+		Params(returns...).
+		Block(block...)
+}
 
-	}
-
-	return Qual("github.com/Masterminds/squirrel", "Expr").Call()
+func (g *FilterGenerator) AddMethod(name string, args, block, returns []Code) {
+	receiver := Id(g.modelNames().QuerysetFilterOptionsStruct)
+	g.File.Func().Params(receiver).Id(name).
+		Params(args...).
+		Params(returns...).
+		Block(block...)
 }
 
 func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) {
@@ -64,14 +72,40 @@ func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) 
 		defineGoType = Id("v").Id(segments[0])
 	}
 
-	g.AddFilterMethod(
-		f,
-		name,
-		defineGoType,
-		Op("&").Qual("github.com/Masterminds/squirrel", sqName).Values(Dict{
-			Lit(g.names(f).QualifiedColumn): Id("v"),
-		}),
-	)
+	sqStruct := Op("&").Qual("github.com/Masterminds/squirrel", sqName)
+	filterDef := sqStruct.Values(Dict{Lit(g.names(f).QualifiedColumn): Id("v")})
+	g.AddFilterMethod(f, name, defineGoType, filterDef)
+}
+
+func (g *FilterGenerator) AddOrFilter() {
+	for fnName, sqType := range map[string]string{"And": "And", "Or": "Or"} {
+		sqType := Qual("github.com/Masterminds/squirrel", sqType)
+		sqDef := Id("q").Op(":=").Add(sqType).Values()
+		joinDef := Id("j").Op(":=").Make(Index().String(), Lit(0))
+
+		mapFilters := For(
+			Op("_").Op(",").Id("f").Op(":=").Range().Id("filter"),
+		).Block(
+			Op("q").Op("=").Append(Id("q"), Id("f").Dot("filter")),
+			Op("j").Op("=").Append(Id("j"), Id("f").Dot("joins").Op("...")),
+		)
+
+		filter := Id(g.modelNames().QuerysetFilterArgStruct).Values(Dict{
+			Id("filter"): Id("q"),
+			Id("joins"):  Id("j"),
+		})
+
+		g.AddMethod(fnName,
+			[]Code{Id("filter").Op("...").Id(g.modelNames().QuerysetFilterArgStruct)},
+			[]Code{
+				sqDef,
+				joinDef.Line(),
+				mapFilters.Line(),
+				Return(filter),
+			},
+			[]Code{Id(g.modelNames().QuerysetFilterArgStruct)},
+		)
+	}
 }
 
 func (g *FilterGenerator) AddFilterOptionsStruct() {
@@ -90,39 +124,47 @@ func (g *FilterGenerator) AddFilterOptionsStruct() {
 	g.File.Type().Id(structName).Struct(fields...)
 }
 
+func (g *FilterGenerator) AddOperationFilters(f Field) {
+	for op, name := range f.Operations() {
+		switch op {
+		case Exact:
+			g.AddSimpleSquirrelFilter(f, name, "Eq")
+		case Gt:
+			g.AddSimpleSquirrelFilter(f, name, "Gt")
+		case Gte:
+			g.AddSimpleSquirrelFilter(f, name, "GtOrEq")
+		case Lt:
+			g.AddSimpleSquirrelFilter(f, name, "Lt")
+		case Lte:
+			g.AddSimpleSquirrelFilter(f, name, "LtOrEq")
+		case Contains:
+			g.AddSimpleSquirrelFilter(f, name, "Like")
+		case IContains:
+			g.AddSimpleSquirrelFilter(f, name, "ILike")
+		default:
+			// TODO: Handle the rest
+			//panic("Unsupported field type " + string(op))
+		}
+	}
+}
+
+func (g *FilterGenerator) AddNullFilterMaybe(f Field) {
+	if !f.Settings().Null {
+		return
+	}
+
+	eq := Op("&").Qual("github.com/Masterminds/squirrel", "Eq")
+	filter := eq.Values(Dict{Lit(g.names(f).QualifiedColumn): Nil()})
+	g.AddFilterMethod(f, "Null", nil, filter)
+}
+
 func (g *FilterGenerator) Generate() {
 	for _, f := range g.Model.Fields() {
 		g.AddStruct(f)
-		for _, op := range f.Operations() {
-			switch op {
-			case Exact:
-				g.AddSimpleSquirrelFilter(f, "Eq", "Eq")
-			case Gt:
-				g.AddSimpleSquirrelFilter(f, "Gt", "Gt")
-			case Gte:
-				g.AddSimpleSquirrelFilter(f, "Gte", "GtOrEq")
-			case Lt:
-				g.AddSimpleSquirrelFilter(f, "Lt", "Lt")
-			case Lte:
-				g.AddSimpleSquirrelFilter(f, "Lte", "LtOrEq")
-			case Contains:
-				g.AddSimpleSquirrelFilter(f, "Contains", "Like")
-			case IContains:
-				g.AddSimpleSquirrelFilter(f, "IContains", "ILike")
-			}
-		}
-
-		if f.Settings().Null {
-			g.AddFilterMethod(
-				f,
-				"Null",
-				nil,
-				Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
-					Lit(g.names(f).QualifiedColumn): Nil(),
-				}),
-			)
-		}
+		g.AddOperationFilters(f)
+		g.AddNullFilterMaybe(f)
 	}
 
 	g.AddFilterOptionsStruct()
+	g.AddOrFilter()
 }

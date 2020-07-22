@@ -29,22 +29,22 @@ func (f TextField) EmptyDefault() interface{} {
 	return ""
 }
 
-func (f TextField) Operations() []Operation {
-	return []Operation{
-		Exact,
-		IExact,
-		Contains,
-		IContains,
-		Regex,
-		IRegex,
-		Gt,
-		Gte,
-		Lt,
-		Lte,
-		StartsWith,
-		EndsWith,
-		IStartsWith,
-		IEndsWith,
+func (f TextField) Operations() map[Operation]string {
+	return map[Operation]string{
+		Exact:       "Eq",
+		IExact:      "",
+		Contains:    "Contains",
+		IContains:   "IContains",
+		Regex:       "Regex",
+		IRegex:      "IRegex",
+		Gt:          "Gt",
+		Gte:         "Gte",
+		Lt:          "Lt",
+		Lte:         "Lte",
+		StartsWith:  "HasPrefix",
+		EndsWith:    "HasSuffix",
+		IStartsWith: "IHasPrefix",
+		IEndsWith:   "IHasSuffix",
 	}
 }
 

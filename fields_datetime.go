@@ -31,8 +31,12 @@ func (f DateTimeField) EmptyDefault() interface{} {
 	return time.Time{}
 }
 
-func (f DateTimeField) Operations() []Operation {
-	return []Operation{Exact, Gt, Gte, Lt, Lte}
+func (f DateTimeField) Operations() map[Operation]string {
+	return map[Operation]string{
+		Exact: "Eq",
+		Lt:    "Before",
+		Gt:    "After",
+	}
 }
 
 // DateTimeFieldBuilder

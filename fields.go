@@ -118,10 +118,11 @@ type Field interface {
 	EmptyDefault() interface{}
 
 	// Operations specifies a list of queryset operations that can be
-	// performed on the field
+	// performed on the field. The value in the map is the user-facing
+	// name.
 	//
 	// For example
 	//   - Integer will have >=, >, ==, etc
 	//   - Boolean will have ==, etc
-	Operations() []Operation
+	Operations() map[Operation]string
 }

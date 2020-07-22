@@ -29,8 +29,10 @@ func (f BooleanField) EmptyDefault() interface{} {
 	return false
 }
 
-func (f BooleanField) Operations() []Operation {
-	return []Operation{Exact}
+func (f BooleanField) Operations() map[Operation]string {
+	return map[Operation]string{
+		Exact: "Eq",
+	}
 }
 
 // BooleanFieldBuilder

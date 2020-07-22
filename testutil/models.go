@@ -20,6 +20,7 @@ func (u TestUser) Fields() []banister.Field {
 	return []banister.Field{
 		banister.NewAutoField("id").Build(),
 		banister.NewIntegerField("age").Null().Build(),
+		banister.NewBooleanField("admin").Build(),
 		banister.NewTextField("name").Build(),
 		banister.NewTextField("username").Unique().Build(),
 		banister.NewDateTimeField("created").Build(),

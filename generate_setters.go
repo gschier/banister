@@ -21,7 +21,7 @@ func (g *SettersGenerator) names() GeneratedModelNames {
 
 // AddMethod is a helper to add a struct method
 func (g *SettersGenerator) AddMethod(name string, args, block, returns []Code) {
-	receiver := Id("qs").Id(g.names().QuerysetSetterOptionsStruct)
+	receiver := Id(g.names().QuerysetSetterOptionsStruct)
 	g.File.Func().Params(receiver).Id(name).
 		Params(args...).
 		Params(returns...).

@@ -29,8 +29,14 @@ func (f IntegerField) EmptyDefault() interface{} {
 	return int64(0)
 }
 
-func (f IntegerField) Operations() []Operation {
-	return []Operation{Exact, Lt, Lte, Gt, Gte}
+func (f IntegerField) Operations() map[Operation]string {
+	return map[Operation]string{
+		Exact: "Eq",
+		Lt:    "Lt",
+		Lte:   "Lte",
+		Gt:    "Gt",
+		Gte:   "Gte",
+	}
 }
 
 // IntegerFieldBuilder
