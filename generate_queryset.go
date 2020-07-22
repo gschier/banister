@@ -191,20 +191,22 @@ func (g *QuerysetGenerator) AddAllMethod() {
 }
 
 func (g *QuerysetGenerator) AddOneMethod() {
+	callAll := Id("items").Op(",").Err().Op(":=").Id("qs").Dot("All").Call()
+
+	checkLen := If(Len(Id("items")).Op("==").Lit(0)).Block(
+		Return(Nil(), Qual("database/sql", "ErrNoRows")),
+	)
+
 	g.AddMethodWithPanicVariant("One",
 		[]Code{},
 		[]Code{},
-		[]Code{Panic(Lit("implement me"))},
+		[]Code{
+			callAll.Line(),
+			Comment("Ensure we have a result"),
+			checkLen.Line(),
+			Return(Op("&").Id("items").Index(Lit(0)), Err()),
+		},
 		[]Code{Op("*").Id(g.names().ModelStruct), Error()},
-	)
-}
-
-func (g *QuerysetGenerator) AddCountMethod() {
-	g.AddMethodWithPanicVariant("Count",
-		[]Code{},
-		[]Code{},
-		[]Code{Panic(Lit("implement me"))},
-		[]Code{Int(), Error()},
 	)
 }
 
@@ -401,14 +403,14 @@ func (g *QuerysetGenerator) AddMethodWithPanicVariant(name string, args, panicAr
 		// Original method only returned error, so only expect error back
 		panicVariantReturns = []Code{}
 		callOriginalAndMaybePanic = []Code{
-			Err().Op(":=").Id("mgr").Dot(name).Call(panicArgs...),
+			Err().Op(":=").Id("qs").Dot(name).Call(panicArgs...),
 			If(Err().Op("!=").Nil()).Block(Panic(Err())),
 		}
 	} else {
 		// Original method returned a value too, so handle that as well
 		panicVariantReturns = []Code{returns[0]}
 		callOriginalAndMaybePanic = []Code{
-			Id("v").Op(",").Err().Op(":=").Id("mgr").Dot(name).Call(panicArgs...),
+			Id("v").Op(",").Err().Op(":=").Id("qs").Dot(name).Call(panicArgs...),
 			If(Err().Op("!=").Nil()).Block(Panic(Err())),
 			Return(Id("v")),
 		}
@@ -431,7 +433,6 @@ func (g *QuerysetGenerator) Generate() {
 	g.AddAllMethod()
 	g.AddOneMethod()
 	g.AddDeleteMethod()
-	g.AddCountMethod()
 	g.AddScanMethod()
 	g.AddStarSelectMethod()
 	g.AddToSQLMethod()

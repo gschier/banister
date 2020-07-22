@@ -40,6 +40,20 @@ func TestIntegrate(t *testing.T) {
 		assert.Equal(t, 4, len(users))
 	})
 
+	t.Run("Get and One work", func(t *testing.T) {
+		store, _ := createStore(t)
+		kid := store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
+		store.Users.InsertP(Set.User.Username("adult"), Set.User.Age(28))
+
+		user := store.Users.
+			Filter(Where.User.Username.Eq("kid")).
+			OneP()
+		assert.Equal(t, kid, user)
+
+		user = store.Users.GetP(kid.ID)
+		assert.Equal(t, kid, user)
+	})
+
 	t.Run("Deletes results", func(t *testing.T) {
 		store, _ := createStore(t)
 		user := store.Users.InsertP(Set.User.Username("foo"), Set.User.Age(11))
