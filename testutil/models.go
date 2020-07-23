@@ -24,6 +24,7 @@ func (u TestUser) Fields() []banister.Field {
 		banister.NewTextField("name").Build(),
 		banister.NewTextField("username").Unique().Build(),
 		banister.NewDateTimeField("created").Build(),
+		banister.NewTextField("bio").Default("Fill me in").Build(),
 	}
 }
 
@@ -46,7 +47,7 @@ func (u TestPost) Fields() []banister.Field {
 		banister.NewTextField("title").Default("Change Me").Build(),
 		banister.NewTextField("slug").Unique().Build(),
 		banister.NewTextField("subtitle").Null().Build(),
-		banister.NewTextField("content").Default("Fill me in").Build(),
+		banister.NewTextField("content").Default("Fill 'this' \"in\"").Build(),
 		banister.NewDateTimeField("created").Build(),
 		banister.NewBooleanField("deleted").Build(),
 		banister.NewBooleanField("approved").Null().Build(),
