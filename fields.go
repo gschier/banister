@@ -21,6 +21,13 @@ type FieldSettings struct {
 
 	// Size specifies the size of an array field
 	Size *uint
+
+	// Relationships
+
+	ManyToMany bool
+	ManyToOne  bool
+	OneToMany  bool
+	OneToOne   bool
 }
 
 func (s *FieldSettings) Fix() {
@@ -54,13 +61,13 @@ func (d DefaultValue) IsValid() bool {
 
 type Rel struct {
 	// To specifies the name of the model that the relationship points to
-	To string
+	To Model
 
 	// ToField specifies the field of the related model that this relation
 	// links to.
 	//
 	// This is usually the primary key, which is usually ID
-	ToField string
+	ToField Field
 
 	// RelatedName specifies the reverse name that links back to this
 	// field's model
@@ -125,4 +132,12 @@ type Field interface {
 	//   - Integer will have >=, >, ==, etc
 	//   - Boolean will have ==, etc
 	Operations() map[Operation]string
+
+	// ProvideModels is called to allow the field greater context to the
+	// rest of the models in order to setup things like relationships
+	ProvideModels(m Model, models []Model)
+}
+
+type FieldBuilder interface {
+	Build() Field
 }

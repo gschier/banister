@@ -39,19 +39,18 @@ func (f DateTimeField) Operations() map[Operation]string {
 	}
 }
 
+func (f DateTimeField) ProvideModels(_ Model, _ []Model) {
+	// Nothing yet
+}
+
 // DateTimeFieldBuilder
 type DateTimeFieldBuilder struct {
 	field *DateTimeField
 }
 
-func (f *DateTimeFieldBuilder) Build() DateTimeField {
+func (f *DateTimeFieldBuilder) Build() Field {
 	f.field.settings.Fix()
 	return *f.field
-}
-
-func (f *DateTimeFieldBuilder) Hidden() *DateTimeFieldBuilder {
-	f.field.settings.Hidden = true
-	return f
 }
 
 func (f *DateTimeFieldBuilder) Default(s time.Time) *DateTimeFieldBuilder {

@@ -48,19 +48,18 @@ func (f TextField) Operations() map[Operation]string {
 	}
 }
 
+func (f TextField) ProvideModels(_ Model, _ []Model) {
+	// Nothing yet
+}
+
 // TextFieldBuilder
 type TextFieldBuilder struct {
 	field *TextField
 }
 
-func (f *TextFieldBuilder) Build() TextField {
+func (f *TextFieldBuilder) Build() Field {
 	f.field.settings.Fix()
 	return *f.field
-}
-
-func (f *TextFieldBuilder) Hidden() *TextFieldBuilder {
-	f.field.settings.Hidden = true
-	return f
 }
 
 func (f *TextFieldBuilder) Default(s string) *TextFieldBuilder {

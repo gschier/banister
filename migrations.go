@@ -6,10 +6,10 @@ import (
 )
 
 type Migration struct {
-	Models []Model
+	Models []model
 }
 
-func (mig *Migration) model(name string) Model {
+func (mig *Migration) model(name string) model {
 	for _, m := range mig.Models {
 		if strings.ToLower(m.Settings().Name) == strings.ToLower(name) {
 			return m
@@ -19,7 +19,7 @@ func (mig *Migration) model(name string) Model {
 	panic("failed to find model by name: " + name)
 }
 
-func (mig *Migration) field(m Model, name string) Field {
+func (mig *Migration) field(m model, name string) Field {
 	for _, f := range m.Fields() {
 		if strings.ToLower(f.Settings().Name) == strings.ToLower(name) {
 			return f

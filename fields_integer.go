@@ -39,19 +39,22 @@ func (f IntegerField) Operations() map[Operation]string {
 	}
 }
 
+func (f IntegerField) ProvideModels(_ Model, _ []Model) {
+	// Nothing yet
+}
+
 // IntegerFieldBuilder
 type IntegerFieldBuilder struct {
 	field *IntegerField
 }
 
-func (f *IntegerFieldBuilder) Build() IntegerField {
+func (f *IntegerFieldBuilder) build() IntegerField {
 	f.field.settings.Fix()
 	return *f.field
 }
 
-func (f *IntegerFieldBuilder) Hidden(b bool) *IntegerFieldBuilder {
-	f.field.settings.Hidden = b
-	return f
+func (f *IntegerFieldBuilder) Build() Field {
+	return f.build()
 }
 
 func (f *IntegerFieldBuilder) Default(i int64) *IntegerFieldBuilder {

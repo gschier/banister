@@ -26,7 +26,7 @@ func (g *StoreGenerator) AddStruct() {
 		append([]Code{
 			Id("db").Op("*").Qual("database/sql", "DB"),
 			Id("config").Id(globalNames.StoreConfigStruct),
-			Line().Comment("Model managers").Line(),
+			Line().Comment("model managers").Line(),
 		}, modelConfigs...)...,
 	)
 }
@@ -70,7 +70,7 @@ func (g *StoreGenerator) AddConfigStruct() {
 			Id("maxIdleConnections").Int(),
 			Id("maxOpenConnections").Int(),
 			Id("connectionMaxLifetime").Qual("time", "Duration"),
-			Line().Comment("Model configs").Line(),
+			Line().Comment("model configs").Line(),
 		}, modelConfigs...)...,
 	)
 }

@@ -125,16 +125,38 @@ func TestIntegrate(t *testing.T) {
 		assert.Equal(t, 1, len(users))
 		assert.Equal(t, "pupper", users[0].Username)
 	})
+
+	t.Run("Nullable fields with defaults work", func(t *testing.T) {
+		store, user := createStore(t)
+		p := store.Posts.InsertP(
+			Set.Post.UserID(user.ID),
+		)
+		assert.Equal(t, int64(50), *p.Score)
+	})
 }
 
 func createStore(t *testing.T) (*Store, *User) {
-	db, err := sql.Open("sqlite3", ":memory:")
+	db, err := sql.Open("sqlite3", ":memory:?_fk=1")
 	assert.Nil(t, err, "sqlite should open connection")
 
-	_, err = db.Exec(banister.BuildTableSQL(
-		banister.GetBackend("sqlite3"),
+	models := []banister.Model{
 		testutil.TestUserModel(),
-	))
+		testutil.TestPostModel(),
+	}
+
+	// NOTE: Hack to initialize models, which will not be necessary once we
+	//   have generated migrations
+	for _, m := range models {
+		m.ProvideModels(models)
+	}
+
+	backend := banister.GetBackend("sqlite3")
+	sqlStr := "" +
+		banister.BuildTableSQL(backend, models[0]) + "\n" +
+		banister.BuildTableSQL(backend, models[1])
+	//println(sqlStr)
+
+	_, err = db.Exec(sqlStr)
 	assert.Nil(t, err, "tables should be created")
 
 	store := NewStore(db, StoreConfig{

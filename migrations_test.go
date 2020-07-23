@@ -8,7 +8,7 @@ import (
 )
 
 func TestMigration_RenameField(t *testing.T) {
-	m := Migration{Models: []Model{TestUserModel()}}
+	m := Migration{Models: []model{TestUserModel()}}
 	s := m.RenameField("user", "username", "handle")
 	assert.Equal(t, "RENAME COLUMN username TO handle;", s)
 }

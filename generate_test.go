@@ -11,7 +11,7 @@ func TestGenerate(t *testing.T) {
 	src := GenerateToString(&GenerateConfig{
 		OutputDir:   "./generate/foo/bar",
 		PackageName: "dummy",
-		Models: []Model{
+		Models: []model{
 			testutil.TestUserModel(),
 			testutil.TestPostModel(),
 		},

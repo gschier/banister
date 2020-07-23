@@ -86,15 +86,15 @@ func (g *ManagerGenerator) AddConstructor() {
 
 func (g *ManagerGenerator) AddDeleteMethod() {
 	pkSettings := PrimaryKeyField(g.Model).Settings()
-	callQuerysetDelete := Err().Op(":=").Id("mgr").Dot("Filter").Call(
-		Id(g.names().QuerysetFilterArgStruct).Values(Dict{
-			Id("filter"): Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
-				Lit(pkSettings.DBColumn): Id("m").Dot(pkSettings.Name),
-			}),
-		}),
-	).Dot("Delete").Call()
-
 	checkErr := If(Err().Op("!=").Nil()).Block(Return(Err()))
+
+	filterDef := Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
+		Lit(pkSettings.DBColumn): Id("m").Dot(pkSettings.Name),
+	})
+
+	callQuerysetDelete := Err().Op(":=").Id("mgr").Dot("Filter").Call(
+		Id(g.names().QuerysetFilterArgStruct).Values(Dict{Id("filter"): filterDef}),
+	).Dot("Delete").Call()
 
 	g.AddMethodWithPanicVariant("Delete",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
@@ -148,19 +148,17 @@ func (g *ManagerGenerator) MaybeCallHook(hookName string) *Statement {
 func (g *ManagerGenerator) AddInsertInstanceMethod() {
 	columns := make([]Code, 0)
 	values := make([]Code, 0)
-	for _, f := range g.Model.Fields() {
-		// Skip auto-created fields
-		if f.Type() == Auto {
-			continue
-		}
 
+	for _, f := range g.Model.Fields() {
+		if f.Type() == Auto {
+			continue // Skip auto-created fields
+		}
 		columns = append(columns, Lit(f.Settings().DBColumn))
 		values = append(values, Op("m").Dot(f.Settings().Name))
 	}
 
-	defineQuery := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Insert").Call(
-		Lit(g.Model.Settings().DBTable),
-	)
+	insert := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Insert")
+	defineQuery := insert.Call(Lit(g.Model.Settings().DBTable))
 
 	addColumns := Id("query").Op("=").Id("query").Dot("Columns").Call(columns...)
 	addValues := Id("query").Op("=").Id("query").Dot("Values").Call(values...)
@@ -210,12 +208,12 @@ func (g *ManagerGenerator) AddUpdateMethod() {
 	}
 
 	pkSettings := PrimaryKeyField(g.Model).Settings()
+	filterDef := Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
+		Lit(pkSettings.DBColumn): Id("m").Dot(pkSettings.Name),
+	})
+
 	callQuerysetDelete := Err().Op(":=").Id("mgr").Dot("Filter").Call(
-		Id(g.names().QuerysetFilterArgStruct).Values(Dict{
-			Id("filter"): Op("&").Qual("github.com/Masterminds/squirrel", "Eq").Values(Dict{
-				Lit(pkSettings.DBColumn): Id("m").Dot(pkSettings.Name),
-			}),
-		}),
+		Id(g.names().QuerysetFilterArgStruct).Values(Dict{Id("filter"): filterDef}),
 	).Dot("Update").Call(setters...)
 
 	g.AddMethodWithPanicVariant("Update",
@@ -253,22 +251,6 @@ func (g *ManagerGenerator) AddGetMethod() {
 	)
 }
 
-func (g *ManagerGenerator) AddOrMethod() {
-	g.AddMethod("Or",
-		[]Code{Id("filter").Op("...").Id(g.names().QuerysetFilterArgStruct)},
-		[]Code{Panic(Lit("implement me"))},
-		[]Code{Id(g.names().QuerysetFilterArgStruct)},
-	)
-}
-
-func (g *ManagerGenerator) AddAndMethod() {
-	g.AddMethod("And",
-		[]Code{Id("filter").Op("...").Id(g.names().QuerysetFilterArgStruct)},
-		[]Code{Panic(Lit("implement me"))},
-		[]Code{Id(g.names().QuerysetFilterArgStruct)},
-	)
-}
-
 func (g *ManagerGenerator) AddToSQLMethod() {
 	genSQL := Id("query").Op(",").Id("args").Op(",").Err().Op(":=").
 		Id("q").Dot("ToSql").Call()
@@ -294,11 +276,9 @@ func (g *ManagerGenerator) AddToSQLMethod() {
 }
 
 func (g *ManagerGenerator) AddNewModelMethod() {
-	defaultValues := Dict{}
 	setterCases := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
-		var castTo Code
-		var defaultValue Code
+		var castTo *Statement
 
 		goType := fmt.Sprintf("%T", f.EmptyDefault())
 		goDefaultVal := f.Settings().Default.Value
@@ -309,34 +289,27 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 			goDefaultVal = f.EmptyDefault()
 		}
 
-		switch v := goDefaultVal.(type) {
+		switch goDefaultVal.(type) {
 		case nil:
-			defaultValue = Nil()
 			castTo = Id(goType)
 		case time.Time:
-			defaultValue = Qual("time", "Time").Values()
 			castTo = Qual("time", "Time")
 		case time.Duration:
-			defaultValue = Qual("time", "Duration").Call()
 			castTo = Qual("time", "Duration")
 		default:
-			defaultValue = Lit(v)
 			castTo = Id(goType)
 		}
 
 		// Nullable fields have null-friendly defaults and pointer casts
 		if f.Settings().Null {
 			castTo = Id("*").Add(castTo)
-			defaultValue = Nil()
 		}
 
 		// Add setter to cases
 		var newCase Code
 		if f.Settings().Null {
 			newCase = Case(Lit(f.Settings().DBColumn)).Block(
-				If(
-					Id("s").Dot("value").Op("!=").Nil(),
-				).Block(
+				If(Id("s").Dot("value").Op("!=").Nil()).Block(
 					Id("m").Dot(f.Settings().Name).Op("=").Id("s").Dot("value").Op(".").Params(castTo),
 				).Else().Block(
 					Id("m").Dot(f.Settings().Name).Op("=").Nil().Comment("Cannot cast nil"),
@@ -344,12 +317,10 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 			)
 		} else {
 			newCase = Case(Lit(f.Settings().DBColumn)).Block(
-				Id("m").Dot(f.Settings().Name).Op("=").
-					Id("s").Dot("value").Op(".").Params(castTo),
+				Id("m").Dot(f.Settings().Name).Op("=").Id("s").Dot("value").Op(".").Params(castTo),
 			)
 		}
 
-		defaultValues[Id(f.Settings().Name)] = defaultValue
 		setterCases = append(setterCases, newCase)
 	}
 
@@ -358,8 +329,7 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 		Panic(Lit("invalid field for setter: ").Op("+").Id("s").Dot("field")),
 	))
 
-	instantiateWithDefaults := Id("m").Op(":=").
-		Id(g.names().ModelStruct).Values(defaultValues)
+	instantiate := Id("m").Op(":=").Id(g.names().ModelConstructor).Call()
 
 	loopOverSetters := For(
 		Op("_").Op(",").Id("s").Op(":=").Range().Id("set"),
@@ -370,9 +340,10 @@ func (g *ManagerGenerator) AddNewModelMethod() {
 	g.AddMethod("newModel",
 		[]Code{Id("set").Op("...").Id(g.names().QuerysetSetterArgStruct)},
 		[]Code{
-			instantiateWithDefaults.Line(),
+			instantiate.Line(),
+			Comment("Apply setters to default struct"),
 			loopOverSetters.Line(),
-			Return(Op("&").Id("m")),
+			Return(Id("m")),
 		},
 		[]Code{Op("*").Id(g.names().ModelStruct)},
 	)
@@ -402,7 +373,5 @@ func (g *ManagerGenerator) Generate() {
 	g.AddAllMethod()
 	g.AddGetMethod()
 	g.AddNewModelMethod()
-	g.AddAndMethod()
-	g.AddOrMethod()
 	g.AddToSQLMethod()
 }

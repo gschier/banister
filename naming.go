@@ -14,8 +14,9 @@ type GeneratedModelNames struct {
 	QuerysetStruct      string
 	QuerysetConstructor string
 
-	ModelStruct  string
-	ConfigStruct string
+	ModelStruct      string
+	ModelConstructor string
+	ConfigStruct     string
 
 	QuerysetFilterArgStruct  string
 	QuerysetOrderByArgStruct string
@@ -67,8 +68,9 @@ func NamesForModel(modelName string) GeneratedModelNames {
 		QuerysetStruct:      PrivateGoName(modelName + "Queryset"),
 		QuerysetConstructor: PrivateGoName("New" + modelName + "Queryset"),
 
-		ModelStruct:  PublicGoName(modelName),
-		ConfigStruct: PublicGoName(modelName + "Config"),
+		ModelStruct:      PublicGoName(modelName),
+		ModelConstructor: PublicGoName("New" + modelName),
+		ConfigStruct:     PublicGoName(modelName + "Config"),
 
 		QuerysetFilterOptionsStruct:       PrivateGoName(modelName + "Filters"),
 		QuerysetOrderByOptionsStruct:      PrivateGoName(modelName + "Orders"),

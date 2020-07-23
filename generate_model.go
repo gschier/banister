@@ -4,6 +4,7 @@ import (
 	"fmt"
 	. "github.com/dave/jennifer/jen"
 	"strings"
+	"time"
 )
 
 type ModelGenerator struct {
@@ -67,6 +68,58 @@ func (g *ModelGenerator) AddJSONMethod() {
 	)
 }
 
+func (g *ModelGenerator) AddConstructor() {
+	defaultValues := Dict{}
+
+	for _, f := range g.Model.Fields() {
+		fieldDefault := f.Settings().Default
+		goDefaultVal := fieldDefault.Value
+
+		// If no default is provided and nil is not allowed, use the
+		// fallback default
+		if f.Settings().Null == false && !fieldDefault.IsValid() {
+			goDefaultVal = f.EmptyDefault()
+		}
+
+		var defaultValue *Statement
+		switch v := goDefaultVal.(type) {
+		case nil:
+			// NOTE: Special case for nil defaults
+			defaultValues[Id(f.Settings().Name)] = Nil()
+			continue
+		case time.Time:
+			defaultValue = Qual("time", "Time").Values()
+		case time.Duration:
+			defaultValue = Qual("time", "Duration").Call()
+		default:
+			defaultValue = Lit(v)
+		}
+
+		if f.Settings().Null {
+			goType := Id(fmt.Sprintf("%T", f.EmptyDefault()))
+			defaultValues[Id(f.Settings().Name)] = Func().Params(
+				Id("v").Add(goType),
+			).Params(
+				Op("*").Add(goType), // Returns pointer to type
+			).Block(
+				Return(Op("&").Id("v")),
+			).Call(defaultValue)
+		} else {
+			defaultValues[Id(f.Settings().Name)] = defaultValue
+		}
+	}
+
+	instantiateWithDefaults := Op("&").Id(g.names().ModelStruct).Values(defaultValues)
+
+	g.File.Comment(g.names().ModelConstructor + " returns a new instance of " +
+		g.names().ModelStruct + " with default values")
+	g.File.Func().Id(g.names().ModelConstructor).Params( /* Args */ ).Params(
+		Op("*").Id(g.Model.Settings().Name),
+	).Block(
+		Return(instantiateWithDefaults),
+	)
+}
+
 func (g *ModelGenerator) AddStruct() {
 	// Generate the struct field definitions
 	fields := make([]Code, 0)
@@ -81,5 +134,6 @@ func (g *ModelGenerator) AddStruct() {
 
 func (g *ModelGenerator) Generate() {
 	g.AddStruct()
+	g.AddConstructor()
 	g.AddJSONMethod()
 }

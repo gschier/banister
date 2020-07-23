@@ -77,7 +77,9 @@ func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) 
 	g.AddFilterMethod(f, name, defineGoType, filterDef)
 }
 
-func (g *FilterGenerator) AddOrFilter() {
+func (g *FilterGenerator) AddAndOrMethods() {
+	// TODO: Implement And() and Or() as generic functions when/if generics
+	//   are added to Go.
 	for fnName, sqType := range map[string]string{"And": "And", "Or": "Or"} {
 		sqType := Qual("github.com/Masterminds/squirrel", sqType)
 		sqDef := Id("q").Op(":=").Add(sqType).Values()
@@ -95,6 +97,7 @@ func (g *FilterGenerator) AddOrFilter() {
 			Id("joins"):  Id("j"),
 		})
 
+		g.File.Comment(fnName + " combines multiple filters into one")
 		g.AddMethod(fnName,
 			[]Code{Id("filter").Op("...").Id(g.modelNames().QuerysetFilterArgStruct)},
 			[]Code{
@@ -166,5 +169,5 @@ func (g *FilterGenerator) Generate() {
 	}
 
 	g.AddFilterOptionsStruct()
-	g.AddOrFilter()
+	g.AddAndOrMethods()
 }

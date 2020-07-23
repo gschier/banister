@@ -1,16 +1,16 @@
 package banister
 
 func NewAutoField(name string) *AutoFieldBuilder {
-	settings := NewIntegerField(name).Build().settings
-	settings.PrimaryKey = true
+	base := NewIntegerField(name).build()
+	base.settings.PrimaryKey = true
 	return &AutoFieldBuilder{
-		field: &AutoField{settings: settings},
+		field: &AutoField{base: &base},
 	}
 }
 
 // IntegerField is a database field used for integers
 type AutoField struct {
-	settings *FieldSettings
+	base *IntegerField
 }
 
 func (f AutoField) Type() FieldType {
@@ -18,26 +18,23 @@ func (f AutoField) Type() FieldType {
 }
 
 func (f AutoField) RelType() FieldType {
-	return Integer
+	return f.base.Type()
 }
 
 func (f AutoField) EmptyDefault() interface{} {
-	return int64(0)
+	return f.base.EmptyDefault()
 }
 
 func (f AutoField) Operations() map[Operation]string {
-	return map[Operation]string{
-		Exact: "Eq",
-		Lt:    "Lt",
-		Lte:   "Lte",
-		Gt:    "Gt",
-		Gte:   "Gte",
-	}
+	return f.base.Operations()
 }
 
 func (f AutoField) Settings() FieldSettings {
-	f.settings.Fix()
-	return *f.settings
+	return f.base.Settings()
+}
+
+func (f AutoField) ProvideModels(_ Model, _ []Model) {
+	// Nothing yet
 }
 
 // AutoFieldBuilder
@@ -45,6 +42,6 @@ type AutoFieldBuilder struct {
 	field *AutoField
 }
 
-func (b *AutoFieldBuilder) Build() AutoField {
+func (b *AutoFieldBuilder) Build() Field {
 	return *b.field
 }

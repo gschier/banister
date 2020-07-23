@@ -3,11 +3,11 @@ package banister
 import "github.com/dave/jennifer/jen"
 
 type MigrationGenerator struct {
-	Models []Model
+	Models []model
 	File   *jen.File
 }
 
-func NewMigrationGenerator(file *jen.File, models []Model) *MigrationGenerator {
+func NewMigrationGenerator(file *jen.File, models []model) *MigrationGenerator {
 	return &MigrationGenerator{File: file, Models: models}
 }
 

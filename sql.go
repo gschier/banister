@@ -83,6 +83,23 @@ func BuildColumnSQL(b Backend, f Field, includeDefault bool) string {
 
 func BuildConstraintSQL(b Backend, m Model) string {
 	definitionSQL := make([]string, 0)
-	// TODO: Add support for model-wide constraints
+
+	for _, f := range m.Fields() {
+		if f.Settings().Rel == nil {
+			continue
+		}
+
+		v := b.Operations().CreateFK
+		v = strings.ReplaceAll(v, "__COLUMN__", f.Settings().DBColumn)
+		v = strings.ReplaceAll(v, "__TO_TABLE__", f.Settings().Rel.To.Settings().DBTable)
+		v = strings.ReplaceAll(v, "__TO_COLUMN__", f.Settings().Rel.ToField.Settings().DBColumn)
+		if f.Settings().Rel.OnDelete != "" {
+			v = strings.ReplaceAll(v, "__ON_DELETE__", " ON DELETE "+f.Settings().Rel.OnDelete)
+		} else {
+			v = strings.ReplaceAll(v, "__ON_DELETE__", "")
+		}
+		definitionSQL = append(definitionSQL, v)
+	}
+
 	return strings.Join(definitionSQL, ", ")
 }

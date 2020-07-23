@@ -35,19 +35,18 @@ func (f BooleanField) Operations() map[Operation]string {
 	}
 }
 
+func (f BooleanField) ProvideModels(_ Model, _ []Model) {
+	// Nothing yet
+}
+
 // BooleanFieldBuilder
 type BooleanFieldBuilder struct {
 	field *BooleanField
 }
 
-func (f *BooleanFieldBuilder) Build() BooleanField {
+func (f *BooleanFieldBuilder) Build() Field {
 	f.field.settings.Fix()
 	return *f.field
-}
-
-func (f *BooleanFieldBuilder) Hidden() *BooleanFieldBuilder {
-	f.field.settings.Hidden = true
-	return f
 }
 
 func (f *BooleanFieldBuilder) Default(s bool) *BooleanFieldBuilder {
