@@ -48,6 +48,8 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 		valueDef = Id("v")
 	}
 
+	col := fmt.Sprintf(`"%s"`, f.Settings().DBColumn)
+	g.File.Comment(f.Settings().Name + " sets the " + col + " field to the provided value.")
 	g.AddMethod(f.Settings().Name,
 		[]Code{Id("v").Add(defineGoType)},
 		[]Code{
@@ -61,6 +63,8 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 
 	// Add option to set ptr if nullable field
 	if f.Settings().Null {
+		g.File.Comment("// " + f.Settings().Name + "Ptr sets the " + col +
+			" field but uses a pointer because\n // this field allows NULL values.")
 		g.AddMethod(f.Settings().Name+"Ptr",
 			[]Code{Id("v").Op("*").Add(defineGoType)},
 			[]Code{
@@ -73,6 +77,8 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 		)
 
 		// Add no-arg method to set to Null
+		g.File.Comment(f.Settings().Name + "Null is helper to set the " +
+			col + " field to NULL.")
 		g.AddMethod(f.Settings().Name+"Null",
 			[]Code{},
 			[]Code{

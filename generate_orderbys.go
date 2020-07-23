@@ -16,9 +16,11 @@ func NewOrderBysGenerator(file *File, model Model) *OrderBysGenerator {
 func (g *OrderBysGenerator) AddOrderStructs() {
 	for _, f := range g.Model.Fields() {
 		structName := f.Settings().Names(g.Model).QuerysetOrderByDirectionStruct
-		g.File.Type().Id(structName).Struct(
-			Id("Asc").Id(g.Model.Settings().Names().QuerysetOrderByArgStruct),
-			Id("Desc").Id(g.Model.Settings().Names().QuerysetOrderByArgStruct),
+		g.File.Line().Type().Id(structName).Struct(
+			Comment("Asc orders results in ascending direction").Line().
+				Id("Asc").Id(g.Model.Settings().Names().QuerysetOrderByArgStruct).Line(),
+			Comment("Desc orders results in descending direction").Line().
+				Id("Desc").Id(g.Model.Settings().Names().QuerysetOrderByArgStruct).Line(),
 		)
 	}
 }
@@ -31,7 +33,8 @@ func (g *OrderBysGenerator) AddStruct() {
 		fields = append(fields, Id(name).Id(structName))
 	}
 
-	g.File.Type().Id(g.Model.Settings().Names().QuerysetOrderByOptionsStruct).Struct(fields...)
+	structName := g.Model.Settings().Names().QuerysetOrderByOptionsStruct
+	g.File.Type().Id(structName).Struct(fields...)
 }
 
 func (g *OrderBysGenerator) AddConstructor() {

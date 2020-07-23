@@ -21,6 +21,7 @@ func (g *StoreGenerator) AddStruct() {
 		modelConfigs = append(modelConfigs, fieldDef)
 	}
 
+	g.File.Comment(globalNames.StoreStruct + " defines a data store")
 	g.File.Type().Id(globalNames.StoreStruct).Struct(
 		append([]Code{
 			Id("db").Op("*").Qual("database/sql", "DB"),
@@ -45,6 +46,7 @@ func (g *StoreGenerator) AddConstructor() {
 		)
 	}
 
+	g.File.Comment(globalNames.StoreConstructor + " returns a new store instance")
 	g.File.Func().Id(globalNames.StoreConstructor).Params(
 		Id("db").Op("*").Qual("database/sql", "DB"),
 		Id("c").Id(globalNames.StoreConfigStruct),
@@ -61,6 +63,7 @@ func (g *StoreGenerator) AddConfigStruct() {
 		modelConfigs = append(modelConfigs, configDef)
 	}
 
+	g.File.Comment(globalNames.StoreConfigStruct + " holds configuration for the store")
 	g.File.Type().Id(globalNames.StoreConfigStruct).Struct(
 		append([]Code{
 			Id("connectionStr").String(),
@@ -78,7 +81,7 @@ func (g *StoreGenerator) AddGlobalWhere() {
 		structName := m.Settings().Names().QuerysetFilterOptionsStruct
 		fields = append(fields, Id(m.Settings().Name).Id(structName))
 	}
-	g.File.Comment("Where contains helpers that can be used with Filter(...)")
+	g.File.Comment("Where contains helpers for filtering querysets")
 	g.File.Var().Id("Where").Op("=").Struct(fields...).Values()
 }
 
@@ -89,7 +92,7 @@ func (g *StoreGenerator) AddGlobalSetters() {
 		fields = append(fields, Id(m.Settings().Name).Id(structName))
 	}
 
-	g.File.Comment("Set contains helpers that can be used with Update(...) or Insert(...)")
+	g.File.Comment("Set contains helpers for setting fields during inserts and updates")
 	g.File.Var().Id("Set").Op("=").Struct(fields...).Values()
 }
 
@@ -104,7 +107,7 @@ func (g *StoreGenerator) AddGlobalOrderBys() {
 		values[Id(name)] = Id(names.QuerysetOrderByOptionsConstructor).Call()
 	}
 
-	g.File.Comment("OrderBy contains values that can be passed to OrderBy(...)")
+	g.File.Comment("OrderBy contains helpers for sorting query results")
 	g.File.Var().Id("OrderBy").Op("=").Struct(fields...).Values(values)
 }
 
