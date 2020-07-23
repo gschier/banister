@@ -38,15 +38,21 @@ func BuildColumnSQL(b Backend, f Field, includeDefault bool) string {
 	columnSQL := fmt.Sprintf("%s %s", settings.DBColumn, sqlType)
 
 	if includeDefault && settings.Default.IsValid() {
-		columnSQL += " DEFAULT " + b.QuoteValue(settings.Default)
+		columnSQL += " DEFAULT " + b.QuoteValue(settings.Default.Value)
 	}
 
-	if settings.Null {
-		columnSQL += " NULL"
+	// Set NULL constraint
+	if settings.PrimaryKey {
+		// Primary keys are always NOT NULL
+	} else if settings.Null {
+		// Could set this but it's the default anyway
+		// columnSQL += " NULL"
 	} else {
 		columnSQL += " NOT NULL"
 	}
 
+	// Set uniqueness
+	// NOTE: if it's a PK then UNIQUE is redundant
 	if settings.PrimaryKey {
 		columnSQL += " PRIMARY KEY"
 	} else if settings.Unique {

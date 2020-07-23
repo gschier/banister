@@ -8,7 +8,10 @@ import (
 	"path/filepath"
 )
 
+var __backend Backend = nil
+
 type GenerateConfig struct {
+	Backend     string
 	PackageName string
 	OutputDir   string
 	Models      []Model
@@ -16,6 +19,7 @@ type GenerateConfig struct {
 }
 
 func Generate(c *GenerateConfig) error {
+	__backend = GetBackend(c.Backend)
 	files := generateJen(c)
 	err := os.MkdirAll(c.OutputDir, 0755)
 	if err != nil {

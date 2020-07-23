@@ -19,7 +19,7 @@ func (g *ModelGenerator) names() GeneratedModelNames {
 	return g.Model.Settings().Names()
 }
 
-func (g *ModelGenerator) FieldStmt(f Field) Code {
+func (g *ModelGenerator) GenField(f Field) Code {
 	goType := fmt.Sprintf("%T", f.EmptyDefault())
 	if f.Settings().Null {
 		goType = "*" + goType
@@ -35,30 +35,35 @@ func (g *ModelGenerator) FieldStmt(f Field) Code {
 		field = Id(f.Settings().Name).Id(goType)
 	}
 
-	return field.Tag(map[string]string{"json": f.Settings().JSONName})
+	field.Tag(map[string]string{"json": f.Settings().JSONName})
+	field.Comment(BuildColumnSQL(__backend, f, true))
+
+	return field
 }
 
 func (g *ModelGenerator) AddJSONMethod() {
+	marshall := List(Id("b"), Err()).Op(":=").Qual("encoding/json", "MarshalIndent").Call(
+		Id("model"),
+		Lit("// "),
+		Lit("  "),
+	)
+
+	checkErr := If(Parens(Err().Op("!=").Nil())).Block(Panic(Err()))
+
+	printIt := Qual("fmt", "Printf").Call(
+		Lit("\n// var %s %T = %s\n\n"),
+		Lit(PrivateGoName(g.Model.Settings().Name)),
+		Id("model"),
+		Id("b"),
+	)
+
 	g.File.Comment("PrintJSON prints out a JSON string of the model for debugging")
 	g.File.Func().Params(
 		Id("model").Op("*").Id(g.names().ModelStruct),
-	).Id("PrintJSON").Params(
-	// No function args
-	).Params(
-	// Returns nothing
-	).Block(
-		List(Id("b"), Err()).Op(":=").Qual("encoding/json", "MarshalIndent").Call(
-			Id("model"),
-			Lit("// "),
-			Lit("  "),
-		),
-		If(Parens(Err().Op("!=").Nil())).Block(Panic(Err())),
-		Qual("fmt", "Printf").Call(
-			Lit("\n// var %s %T = %s\n\n"),
-			Lit(PrivateGoName(g.Model.Settings().Name)),
-			Id("model"),
-			Id("b"),
-		),
+	).Id("PrintJSON").Params( /* Args */ ).Params( /* Returns */ ).Block(
+		marshall,
+		checkErr.Line(),
+		printIt,
 	)
 }
 
@@ -66,14 +71,12 @@ func (g *ModelGenerator) AddStruct() {
 	// Generate the struct field definitions
 	fields := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
-		fields = append(fields, g.FieldStmt(f))
+		fields = append(fields, g.GenField(f))
 	}
 
 	name := g.names().ModelStruct
-	comment := "// " + name + " is a database model which represents a single row from the \n" +
-		"// " + g.Model.Settings().DBTable + " database table"
-
-	g.File.Comment(comment).Line().Type().Id(g.names().ModelStruct).Struct(fields...)
+	g.File.Comment(name + " represents a row in the \"" + g.Model.Settings().DBTable + "\" table")
+	g.File.Type().Id(g.names().ModelStruct).Struct(fields...)
 }
 
 func (g *ModelGenerator) Generate() {
