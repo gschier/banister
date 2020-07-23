@@ -133,6 +133,37 @@ func TestIntegrate(t *testing.T) {
 		)
 		assert.Equal(t, int64(50), *p.Score)
 	})
+
+	t.Run("Exclude query", func(t *testing.T) {
+		store, user := createStore(t)
+		users := store.Users.Exclude(
+			Where.User.ID.Eq(user.ID),
+		).AllP()
+		assert.Equal(t, 1, len(users))
+		assert.NotEqual(t, user.ID, users[0].ID)
+	})
+
+	t.Run("Text filters", func(t *testing.T) {
+		store, _ := createStore(t)
+		users := store.Users.Filter(Where.User.Username.Contains("schi")).AllP()
+		assert.Equal(t, 1, len(users))
+	})
+
+	t.Run("Complex exclude query", func(t *testing.T) {
+		store, user := createStore(t)
+		users := store.Users.
+			Filter(Where.User.Age.Gt(0)).
+			Exclude(Where.User.Age.IsNull()).
+			Exclude(
+				Where.User.Age.Eq(*user.Age),
+				Where.User.Or(
+					Where.User.ID.Eq(user.ID),
+					Where.User.Username.Eq(user.Username),
+				),
+			).AllP()
+		assert.Equal(t, 1, len(users))
+		assert.NotEqual(t, user.ID, users[0].ID)
+	})
 }
 
 func createStore(t *testing.T) (*Store, *User) {

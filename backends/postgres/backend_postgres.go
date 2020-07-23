@@ -35,12 +35,31 @@ func (b *Backend) DataTypes() map[banister.FieldType]string {
 	}
 }
 
-func (b *Backend) Operations() banister.DBOperations {
+func (b *Backend) MigrationOperations() banister.DBOperations {
 	return banister.DBOperations{
 		CreateTable:  "CREATE TABLE __TABLE__ ( __DEFINITION__ )",
 		CreateColumn: "ALTER TABLE __TABLE__ ADD COLUMN __COLUMN__ __DEFINITION__",
 		CreateIndex:  "CREATE INDEX __NAME__ ON __TABLE__ (__COLUMN__)__INCLUDE____EXTRA____CONDITION__",
 		CreateFK:     "FOREIGN KEY (__COLUMN__) REFERENCES __TO_TABLE__ (__TO_COLUMN__)__ON_DELETE__",
+	}
+}
+
+func (b *Backend) FilterOperations() map[banister.Operation]string {
+	return map[banister.Operation]string{
+		banister.Exact:       "= ?",
+		banister.IExact:      "LIKE ?",
+		banister.Contains:    "LIKE '%' || ? || '%'",
+		banister.IContains:   "ILIKE '%' || ? || '%'",
+		banister.Regex:       "~ ?",
+		banister.IRegex:      "~* ?",
+		banister.Gt:          "> ?",
+		banister.Gte:         ">= ?",
+		banister.Lt:          "< ?",
+		banister.Lte:         "<= ?",
+		banister.StartsWith:  "LIKE ? || '%'",
+		banister.IStartsWith: "ILIKE ? || '%'",
+		banister.EndsWith:    "LIKE '%' || ?",
+		banister.IEndsWith:   "ILIKE '%' || ?",
 	}
 }
 

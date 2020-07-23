@@ -362,10 +362,24 @@ func (g *ManagerGenerator) AddFilterMethod() {
 	)
 }
 
+func (g *ManagerGenerator) AddExcludeMethod() {
+	g.AddMethod(
+		"Exclude",
+		[]Code{Id("exclude").Op("...").Id(g.names().QuerysetFilterArgStruct)},
+		[]Code{
+			Id("v").Op(":=").Id(g.names().QuerysetConstructor).Call(Id("mgr")),
+			Id("v").Dot("Exclude").Call(Id("exclude").Op("...")),
+			Return(Id("v")),
+		},
+		[]Code{Op("*").Id(g.names().QuerysetStruct)},
+	)
+}
+
 func (g *ManagerGenerator) Generate() {
 	g.AddStruct()
 	g.AddConstructor()
 	g.AddFilterMethod()
+	g.AddExcludeMethod()
 	g.AddDeleteMethod()
 	g.AddInsertMethod()
 	g.AddInsertInstanceMethod()

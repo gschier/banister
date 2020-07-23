@@ -21,7 +21,7 @@ func BuildTableSQL(b Backend, m Model) string {
 		definitionSQL = append(definitionSQL, b.ConstraintSQL(m))
 	}
 
-	tableSQL := b.Operations().CreateTable
+	tableSQL := b.MigrationOperations().CreateTable
 	tableSQL = strings.ReplaceAll(tableSQL, "__TABLE__", m.Settings().DBTable)
 	tableSQL = strings.ReplaceAll(tableSQL, "__DEFINITION__", strings.Join(definitionSQL, ", "))
 
@@ -89,7 +89,7 @@ func BuildConstraintSQL(b Backend, m Model) string {
 			continue
 		}
 
-		v := b.Operations().CreateFK
+		v := b.MigrationOperations().CreateFK
 		v = strings.ReplaceAll(v, "__COLUMN__", f.Settings().DBColumn)
 		v = strings.ReplaceAll(v, "__TO_TABLE__", f.Settings().Rel.To.Settings().DBTable)
 		v = strings.ReplaceAll(v, "__TO_COLUMN__", f.Settings().Rel.ToField.Settings().DBColumn)

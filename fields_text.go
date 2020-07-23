@@ -32,7 +32,7 @@ func (f TextField) EmptyDefault() interface{} {
 func (f TextField) Operations() map[Operation]string {
 	return map[Operation]string{
 		Exact:       "Eq",
-		IExact:      "",
+		IExact:      "ILike",
 		Contains:    "Contains",
 		IContains:   "IContains",
 		Regex:       "Regex",

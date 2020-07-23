@@ -66,6 +66,41 @@ func (g *QuerysetGenerator) AddFilterMethod() {
 	)
 }
 
+func (g *QuerysetGenerator) AddExcludeMethod() {
+	sqType := Qual("github.com/Masterminds/squirrel", "And")
+	sqDef := Id("q").Op(":=").Add(sqType).Values()
+	joinDef := Id("j").Op(":=").Make(Index().String(), Lit(0))
+
+	mapExcludes := For(
+		Op("_").Op(",").Id("e").Op(":=").Range().Id("exclude"),
+	).Block(
+		Op("q").Op("=").Append(Id("q"), Id("e").Dot("filter")),
+		Op("j").Op("=").Append(Id("j"), Id("e").Dot("joins").Op("...")),
+	)
+
+	filterDef := Qual("github.com/Masterminds/squirrel", "ConcatExpr").Call(
+		Lit("NOT"), Id("q"),
+	)
+
+	filterStructDef := Id(g.names().QuerysetFilterArgStruct).Values(Dict{
+		Id("filter"): filterDef,
+		Id("joins"):  Id("j"),
+	})
+
+	appendIt := Id("qs").Dot("filter").Op("=").Append(Id("qs").Dot("filter"), filterStructDef)
+
+	g.AddChainedMethod("Exclude",
+		[]Code{Id("exclude").Op("...").Id(g.names().QuerysetFilterArgStruct)},
+		[]Code{
+			sqDef,
+			joinDef,
+			mapExcludes.Line(),
+			appendIt.Line(),
+			Return(Id("qs")),
+		},
+	)
+}
+
 func (g *QuerysetGenerator) AddSortMethod() {
 	g.AddChainedMethod("Sort",
 		[]Code{Id("orderBy").Op("...").Id(g.names().QuerysetOrderByArgStruct)},
@@ -426,6 +461,7 @@ func (g *QuerysetGenerator) Generate() {
 
 	// Methods
 	g.AddFilterMethod()
+	g.AddExcludeMethod()
 	g.AddSortMethod()
 	g.AddLimitMethod()
 	g.AddOffsetMethod()

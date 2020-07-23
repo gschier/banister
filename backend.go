@@ -3,7 +3,8 @@ package banister
 type Backend interface {
 	DriverName() string
 	DisplayName() string
-	Operations() DBOperations
+	MigrationOperations() DBOperations
+	FilterOperations() map[Operation]string
 	DataTypes() map[FieldType]string
 	DataTypeSuffixes() map[FieldType]string
 	ColumnSQL(f Field, includeDefault bool) string

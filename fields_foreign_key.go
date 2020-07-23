@@ -44,11 +44,7 @@ func (f ForeignKeyField) EmptyDefault() interface{} {
 }
 
 func (f ForeignKeyField) Operations() map[Operation]string {
-	return map[Operation]string{
-		Exact: "Eq",
-		Lt:    "Before",
-		Gt:    "After",
-	}
+	return f.settings.Rel.ToField.Operations()
 }
 
 func (f ForeignKeyField) ProvideModels(parent Model, models []Model) {

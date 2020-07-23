@@ -62,7 +62,12 @@ func (g *FilterGenerator) AddMethod(name string, args, block, returns []Code) {
 		Block(block...)
 }
 
-func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) {
+func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op Operation) {
+	exprStr, ok := __backend.FilterOperations()[op]
+	if !ok {
+		panic("Unsupported filter operation " + name)
+	}
+
 	// If type comes from package, we need to qualify it
 	segments := strings.SplitN(g.goType(f), ".", 2)
 	var defineGoType *Statement
@@ -72,8 +77,8 @@ func (g *FilterGenerator) AddSimpleSquirrelFilter(f Field, name, sqName string) 
 		defineGoType = Id("v").Id(segments[0])
 	}
 
-	sqStruct := Op("&").Qual("github.com/Masterminds/squirrel", sqName)
-	filterDef := sqStruct.Values(Dict{Lit(g.names(f).QualifiedColumn): Id("v")})
+	Expr := Qual("github.com/Masterminds/squirrel", "Expr")
+	filterDef := Expr.Call(Lit(g.names(f).QualifiedColumn+" "+exprStr), Id("v"))
 	g.AddFilterMethod(f, name, defineGoType, filterDef)
 }
 
@@ -129,25 +134,7 @@ func (g *FilterGenerator) AddFilterOptionsStruct() {
 
 func (g *FilterGenerator) AddOperationFilters(f Field) {
 	for op, name := range f.Operations() {
-		switch op {
-		case Exact:
-			g.AddSimpleSquirrelFilter(f, name, "Eq")
-		case Gt:
-			g.AddSimpleSquirrelFilter(f, name, "Gt")
-		case Gte:
-			g.AddSimpleSquirrelFilter(f, name, "GtOrEq")
-		case Lt:
-			g.AddSimpleSquirrelFilter(f, name, "Lt")
-		case Lte:
-			g.AddSimpleSquirrelFilter(f, name, "LtOrEq")
-		case Contains:
-			g.AddSimpleSquirrelFilter(f, name, "Like")
-		case IContains:
-			g.AddSimpleSquirrelFilter(f, name, "ILike")
-		default:
-			// TODO: Handle the rest
-			//panic("Unsupported field type " + string(op))
-		}
+		g.AddFilterExprMethod(f, name, op)
 	}
 }
 
@@ -158,7 +145,7 @@ func (g *FilterGenerator) AddNullFilterMaybe(f Field) {
 
 	eq := Op("&").Qual("github.com/Masterminds/squirrel", "Eq")
 	filter := eq.Values(Dict{Lit(g.names(f).QualifiedColumn): Nil()})
-	g.AddFilterMethod(f, "Null", nil, filter)
+	g.AddFilterMethod(f, "IsNull", nil, filter)
 }
 
 func (g *FilterGenerator) Generate() {
