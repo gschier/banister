@@ -2,22 +2,30 @@ package banister_test
 
 import (
 	. "github.com/gschier/banister"
+	_ "github.com/gschier/banister/backends/postgres"
 	"github.com/gschier/banister/testutil"
-	assert "github.com/stretchr/testify/require"
+	r "github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestGenerate(t *testing.T) {
+	models := []Model{
+		testutil.TestUserModel(),
+		testutil.TestPostModel(),
+	}
+
+	for _, m := range models {
+		m.ProvideModels(models)
+	}
+
 	src := GenerateToString(&GenerateConfig{
 		OutputDir:   "./generate/foo/bar",
 		PackageName: "dummy",
-		Models: []model{
-			testutil.TestUserModel(),
-			testutil.TestPostModel(),
-		},
+		Backend:     "postgres",
+		Models:      models,
 	})
-	assert.Contains(t, src, "type User struct {")
-	assert.Contains(t, src, "type UserConfig struct {")
-	assert.Contains(t, src, "type Post struct {")
-	assert.Contains(t, src, "type PostConfig struct {")
+	r.Contains(t, src, "type User struct {")
+	r.Contains(t, src, "type UserConfig struct {")
+	r.Contains(t, src, "type Post struct {")
+	r.Contains(t, src, "type PostConfig struct {")
 }

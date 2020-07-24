@@ -62,6 +62,7 @@ func (b *Backend) MigrationOperations() banister.DBOperations {
 func (b *Backend) FilterOperations() map[banister.Operation]string {
 	return map[banister.Operation]string{
 		banister.Exact:       "= ?",
+		banister.NotExact:    "!= ?",
 		banister.IExact:      `LIKE ? ESCAPE '\'`,
 		banister.Contains:    `LIKE '%' || ? || '%' ESCAPE '\'`,
 		banister.IContains:   `ILIKE '%' || ? || '%' ESCAPE '\'`,

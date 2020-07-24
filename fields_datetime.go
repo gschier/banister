@@ -33,9 +33,10 @@ func (f DateTimeField) EmptyDefault() interface{} {
 
 func (f DateTimeField) Operations() map[Operation]string {
 	return map[Operation]string{
-		Exact: "Eq",
-		Lt:    "Before",
-		Gt:    "After",
+		Exact:    "Eq",
+		NotExact: "NotEq",
+		Lt:       "Before",
+		Gt:       "After",
 	}
 }
 

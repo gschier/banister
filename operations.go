@@ -4,6 +4,7 @@ type Operation int
 
 const (
 	Exact       = iota // = ?
+	NotExact           // != ?
 	IExact             // ILIKE ?
 	Contains           // LIKE '%' || ? || '%'
 	IContains          // ILIKE '%' || ? || '%'

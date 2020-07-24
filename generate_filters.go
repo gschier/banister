@@ -72,14 +72,18 @@ func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op Operation
 	segments := strings.SplitN(g.goType(f), ".", 2)
 	var defineGoType *Statement
 	if len(segments) == 2 {
-		defineGoType = Id("v").Qual(segments[0], segments[1])
+		defineGoType = Qual(segments[0], segments[1])
 	} else {
-		defineGoType = Id("v").Id(segments[0])
+		defineGoType = Id(segments[0])
 	}
 
 	Expr := Qual("github.com/Masterminds/squirrel", "Expr")
 	filterDef := Expr.Call(Lit(g.names(f).QualifiedColumn+" "+exprStr), Id("v"))
-	g.AddFilterMethod(f, name, defineGoType, filterDef)
+	g.AddFilterMethod(f, name, Id("v").Add(defineGoType), filterDef)
+
+	if op == Exact && f.Settings().Null {
+		g.AddFilterMethod(f, name+"Ptr", Id("v").Op("*").Add(defineGoType), filterDef)
+	}
 }
 
 func (g *FilterGenerator) AddAndOrMethods() {

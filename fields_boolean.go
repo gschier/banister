@@ -31,7 +31,8 @@ func (f BooleanField) EmptyDefault() interface{} {
 
 func (f BooleanField) Operations() map[Operation]string {
 	return map[Operation]string{
-		Exact: "Eq",
+		Exact:    "Eq",
+		NotExact: "NotEq",
 	}
 }
 

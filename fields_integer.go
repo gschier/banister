@@ -31,11 +31,12 @@ func (f IntegerField) EmptyDefault() interface{} {
 
 func (f IntegerField) Operations() map[Operation]string {
 	return map[Operation]string{
-		Exact: "Eq",
-		Lt:    "Lt",
-		Lte:   "Lte",
-		Gt:    "Gt",
-		Gte:   "Gte",
+		Exact:    "Eq",
+		NotExact: "NotEq",
+		Lt:       "Lt",
+		Lte:      "Lte",
+		Gt:       "Gt",
+		Gte:      "Gte",
 	}
 }
 

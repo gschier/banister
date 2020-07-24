@@ -19,7 +19,6 @@ type GenerateConfig struct {
 }
 
 func Generate(c *GenerateConfig) error {
-	__backend = GetBackend(c.Backend)
 	files := generateJen(c)
 	err := os.MkdirAll(c.OutputDir, 0755)
 	if err != nil {
@@ -47,6 +46,8 @@ func GenerateToString(c *GenerateConfig) string {
 }
 
 func generateJen(c *GenerateConfig) map[string]*jen.File {
+	__backend = GetBackend(c.Backend)
+
 	// Initialize models
 	for _, m := range c.Models {
 		m.ProvideModels(c.Models)
@@ -72,6 +73,7 @@ func generateJen(c *GenerateConfig) map[string]*jen.File {
 
 	// Generate things per model
 	NewStoreGenerator(file(globalNames.StoreStruct), c.Models).Generate()
+	NewMigrationGenerator(file("migrations"), c.Models).Generate()
 	for _, m := range c.Models {
 		NewModelGenerator(file(m.Settings().Names().ModelStruct+"Model"), m).Generate()
 		NewModelConfigGenerator(file(m.Settings().Names().ConfigStruct), m).Generate()

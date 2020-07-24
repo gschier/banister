@@ -1,7 +1,7 @@
 package banister
 
 import (
-	assert "github.com/stretchr/testify/require"
+	r "github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -17,7 +17,7 @@ func TestPublicGoName(t *testing.T) {
 
 	for in, out := range names {
 		t.Run("should convert name "+in, func(t *testing.T) {
-			assert.Equal(t, out, PublicGoName(in))
+			r.Equal(t, out, PublicGoName(in))
 		})
 	}
 }
@@ -34,7 +34,7 @@ func TestPrivateGoName(t *testing.T) {
 
 	for in, out := range names {
 		t.Run("should convert name "+in, func(t *testing.T) {
-			assert.Equal(t, out, PrivateGoName(in))
+			r.Equal(t, out, PrivateGoName(in))
 		})
 	}
 }
@@ -51,7 +51,7 @@ func TestDBName(t *testing.T) {
 
 	for in, out := range names {
 		t.Run("should convert name "+in, func(t *testing.T) {
-			assert.Equal(t, out, DBName(in))
+			r.Equal(t, out, DBName(in))
 		})
 	}
 }
@@ -68,7 +68,7 @@ func TestJSONName(t *testing.T) {
 
 	for in, out := range names {
 		t.Run("should convert name "+in, func(t *testing.T) {
-			assert.Equal(t, out, JSONName(in))
+			r.Equal(t, out, JSONName(in))
 		})
 	}
 }

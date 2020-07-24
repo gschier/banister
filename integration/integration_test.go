@@ -7,7 +7,7 @@ import (
 	. "github.com/gschier/banister/integration/generated"
 	"github.com/gschier/banister/testutil"
 	_ "github.com/mattn/go-sqlite3"
-	assert "github.com/stretchr/testify/require"
+	r "github.com/stretchr/testify/require"
 	"testing"
 )
 
@@ -15,8 +15,8 @@ func TestIntegrate(t *testing.T) {
 	t.Run("Inserts a record", func(t *testing.T) {
 		store, _ := createStore(t)
 		user := store.Users.InsertP(Set.User.Username("another"))
-		assert.Equal(t, "another", user.Username)
-		assert.Equal(t, "another", user.Name, "hook should have worked")
+		r.Equal(t, "another", user.Username)
+		r.Equal(t, "another", user.Name, "hook should have worked")
 	})
 
 	t.Run("Filters and returns results", func(t *testing.T) {
@@ -28,16 +28,16 @@ func TestIntegrate(t *testing.T) {
 			Filter(Where.User.Age.Gt(100)).
 			Sort(OrderBy.User.Created.Asc).
 			AllP()
-		assert.Equal(t, 0, len(users))
+		r.Equal(t, 0, len(users))
 
 		users = store.Users.
 			Filter(Where.User.Age.Gt(20)).
 			Sort(OrderBy.User.Created.Desc).
 			AllP()
-		assert.Equal(t, 2, len(users))
+		r.Equal(t, 2, len(users))
 
 		users = store.Users.AllP()
-		assert.Equal(t, 4, len(users))
+		r.Equal(t, 4, len(users))
 	})
 
 	t.Run("Get and One", func(t *testing.T) {
@@ -48,10 +48,10 @@ func TestIntegrate(t *testing.T) {
 		user := store.Users.
 			Filter(Where.User.Username.Eq("kid")).
 			OneP()
-		assert.Equal(t, kid, user)
+		r.Equal(t, kid, user)
 
 		user = store.Users.GetP(kid.ID)
-		assert.Equal(t, kid, user)
+		r.Equal(t, kid, user)
 	})
 
 	t.Run("Or's and And's", func(t *testing.T) {
@@ -70,7 +70,7 @@ func TestIntegrate(t *testing.T) {
 			),
 		).AllP()
 
-		assert.Equal(t, 2, len(users))
+		r.Equal(t, 2, len(users))
 	})
 
 	t.Run("Deletes results", func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestIntegrate(t *testing.T) {
 		store.Users.DeleteP(user)
 
 		users := store.Users.Filter(Where.User.Username.Eq("foo")).AllP()
-		assert.Equal(t, 0, len(users))
+		r.Equal(t, 0, len(users))
 	})
 
 	t.Run("Updates single", func(t *testing.T) {
@@ -90,69 +90,64 @@ func TestIntegrate(t *testing.T) {
 		store.Users.UpdateP(user)
 
 		users := store.Users.AllP()
-		assert.Equal(t, 2, len(users))
-		assert.Equal(t, "Baby", user.Name)
-		assert.Equal(t, "Baby", users[0].Name, "should have updated in DB")
+		r.Equal(t, 2, len(users))
+		r.Equal(t, "Baby", user.Name)
+		r.Equal(t, "Baby", users[0].Name, "should have updated in DB")
 	})
 
 	t.Run("Updates multiple", func(t *testing.T) {
 		store, _ := createStore(t)
 
 		store.Users.Filter(
-			Where.User.Username.Eq("gschier"),
+			Where.User.Username.Eq("bobby"),
 		).UpdateP(
 			Set.User.AgeNull(),
 			Set.User.Admin(true),
 		)
 
 		users := store.Users.AllP()
-		assert.Equal(t, "gschier", users[0].Username)
-		assert.Equal(t, true, users[0].Admin)
-		assert.Nil(t, users[0].Age)
+		r.Equal(t, "bobby", users[0].Username)
+		r.Equal(t, true, users[0].Admin)
+		r.Nil(t, users[0].Age)
 
-		assert.Equal(t, false, users[1].Admin)
-		assert.EqualValues(t, 21, *users[1].Age)
+		r.Equal(t, false, users[1].Admin)
+		r.EqualValues(t, 21, *users[1].Age)
 	})
 
 	t.Run("Bulk delete", func(t *testing.T) {
 		store, _ := createStore(t)
-
-		store.Users.Filter(
-			Where.User.Username.Eq("gschier"),
-		).DeleteP()
-
+		store.Users.Filter(Where.User.Username.Eq("bobby")).DeleteP()
 		users := store.Users.AllP()
-		assert.Equal(t, 1, len(users))
-		assert.Equal(t, "pupper", users[0].Username)
+		r.Equal(t, 1, len(users))
+		r.Equal(t, "tammy", users[0].Username)
 	})
 
 	t.Run("Nullable fields with defaults work", func(t *testing.T) {
 		store, user := createStore(t)
-		p := store.Posts.InsertP(
-			Set.Post.UserID(user.ID),
-		)
-		assert.Equal(t, int64(50), *p.Score)
+		p := store.Posts.InsertP(Set.Post.UserID(user.ID))
+		r.Equal(t, int64(50), *p.Score)
 	})
 
 	t.Run("Exclude query", func(t *testing.T) {
 		store, user := createStore(t)
-		users := store.Users.Exclude(
-			Where.User.ID.Eq(user.ID),
-		).AllP()
-		assert.Equal(t, 1, len(users))
-		assert.NotEqual(t, user.ID, users[0].ID)
+		users := store.Users.Exclude(Where.User.ID.Eq(user.ID)).AllP()
+		r.Equal(t, 1, len(users))
+		r.NotEqual(t, user.ID, users[0].ID)
 	})
 
 	t.Run("Text filters", func(t *testing.T) {
 		store, _ := createStore(t)
-		users := store.Users.Filter(Where.User.Username.Contains("schi")).AllP()
-		assert.Equal(t, 1, len(users))
+		users := store.Users.Filter(Where.User.Username.Contains("amm")).AllP()
+		r.Equal(t, 1, len(users))
 	})
 
 	t.Run("Complex exclude query", func(t *testing.T) {
 		store, user := createStore(t)
 		users := store.Users.
-			Filter(Where.User.Age.Gt(0)).
+			Filter(
+				Where.User.Age.Gt(0),
+				Where.User.Age.NotEq(1123),
+			).
 			Exclude(Where.User.Age.IsNull()).
 			Exclude(
 				Where.User.Age.Eq(*user.Age),
@@ -161,14 +156,14 @@ func TestIntegrate(t *testing.T) {
 					Where.User.Username.Eq(user.Username),
 				),
 			).AllP()
-		assert.Equal(t, 1, len(users))
-		assert.NotEqual(t, user.ID, users[0].ID)
+		r.Equal(t, 1, len(users))
+		r.NotEqual(t, user.ID, users[0].ID)
 	})
 }
 
 func createStore(t *testing.T) (*Store, *User) {
 	db, err := sql.Open("sqlite3", ":memory:?_fk=1")
-	assert.Nil(t, err, "sqlite should open connection")
+	r.Nil(t, err, "sqlite should open connection")
 
 	models := []banister.Model{
 		testutil.TestUserModel(),
@@ -188,7 +183,7 @@ func createStore(t *testing.T) (*Store, *User) {
 	//println(sqlStr)
 
 	_, err = db.Exec(sqlStr)
-	assert.Nil(t, err, "tables should be created")
+	r.Nil(t, err, "tables should be created")
 
 	store := NewStore(db, StoreConfig{
 		UserConfig: UserConfig{
@@ -201,8 +196,8 @@ func createStore(t *testing.T) (*Store, *User) {
 	})
 
 	// Insert some dummy data
-	user := store.Users.InsertP(Set.User.Username("gschier"), Set.User.Age(11))
-	store.Users.InsertP(Set.User.Username("pupper"), Set.User.Age(21))
+	user := store.Users.InsertP(Set.User.Username("bobby"), Set.User.Age(11))
+	store.Users.InsertP(Set.User.Username("tammy"), Set.User.Age(21))
 
 	return store, user
 }

@@ -33,6 +33,7 @@ func (f TextField) Operations() map[Operation]string {
 	return map[Operation]string{
 		Exact:       "Eq",
 		IExact:      "ILike",
+		NotExact:    "NotEq",
 		Contains:    "Contains",
 		IContains:   "IContains",
 		Regex:       "Regex",
