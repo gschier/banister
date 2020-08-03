@@ -82,12 +82,26 @@ func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op QueryOper
 		valueDef = Qual("github.com/lib/pq", "Array").Call(valueDef)
 	}
 
-	Expr := Qual("github.com/Masterminds/squirrel", "Expr")
-	filterDef := Expr.Call(Lit(g.names(f).QualifiedColumn+" "+exprStr), valueDef)
+	filterDef := Qual("github.com/Masterminds/squirrel", "Expr").Call(
+		Lit(g.names(f).QualifiedColumn+" "+exprStr), valueDef,
+	)
+
 	g.AddFilterMethod(f, name, Id("v").Add(defineGoType), filterDef)
 
 	if op == Exact && f.Settings().Null {
 		g.AddFilterMethod(f, name+"Ptr", Id("v").Op("*").Add(defineGoType), filterDef)
+		g.AddFilterMethod(f, "Null", nil, Qual("github.com/Masterminds/squirrel", "Expr").Call(
+			Lit(g.names(f).QualifiedColumn+" "+__backend.Lookups()[Exact]), Nil(),
+		))
+	}
+
+	if op == Exact && f.Type() == Boolean {
+		g.AddFilterMethod(f, "True", nil, Qual("github.com/Masterminds/squirrel", "Expr").Call(
+			Lit(g.names(f).QualifiedColumn+" "+__backend.Lookups()[Exact]), True(),
+		))
+		g.AddFilterMethod(f, "False", nil, Qual("github.com/Masterminds/squirrel", "Expr").Call(
+			Lit(g.names(f).QualifiedColumn+" "+__backend.Lookups()[Exact]), False(),
+		))
 	}
 }
 
