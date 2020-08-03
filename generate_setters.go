@@ -48,6 +48,10 @@ func (g *SettersGenerator) AddSetterMethod(f Field) {
 		valueDef = Id("v")
 	}
 
+	//if f.Type() == TextArray {
+	//	valueDef = Qual("github.com/lib/pq", "Array").Call(valueDef)
+	//}
+
 	col := fmt.Sprintf(`"%s"`, f.Settings().DBColumn)
 	g.File.Comment(f.Settings().Name + " sets the " + col + " field to the provided value.")
 	g.AddMethod(f.Settings().Name,

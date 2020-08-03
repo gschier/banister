@@ -7,6 +7,7 @@ import (
 	. "github.com/gschier/banister/integration/generated"
 	"github.com/gschier/banister/testutil"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
 	r "github.com/stretchr/testify/require"
 	"testing"
 )
@@ -137,7 +138,7 @@ func TestIntegrate(t *testing.T) {
 
 	t.Run("Text filters", func(t *testing.T) {
 		store, _ := createStore(t)
-		users := store.Users.Filter(Where.User.Username.Contains("amm")).AllP()
+		users := store.Users.Filter(Where.User.Username.Contains("obb")).AllP()
 		r.Equal(t, 1, len(users))
 	})
 
@@ -195,9 +196,10 @@ func createStore(t *testing.T) (*Store, *User) {
 		},
 	})
 
-	// Insert some dummy data
-	user := store.Users.InsertP(Set.User.Username("bobby"), Set.User.Age(11))
-	store.Users.InsertP(Set.User.Username("tammy"), Set.User.Age(21))
+	user1 := store.Users.InsertP(Set.User.Username("bobby"), Set.User.Age(11))
+	assert.EqualValues(t, user1.ID, 1)
+	user2 := store.Users.InsertP(Set.User.Username("tammy"), Set.User.Age(21))
+	assert.EqualValues(t, user2.ID, 2)
 
-	return store, user
+	return store, user1
 }

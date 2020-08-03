@@ -124,14 +124,14 @@ type Field interface {
 	// For example, instantiating a model struct.
 	EmptyDefault() interface{}
 
-	// Operations specifies a list of queryset operations that can be
+	// QueryOperators specifies a list of queryset operations that can be
 	// performed on the field. The value in the map is the user-facing
 	// name.
 	//
 	// For example
 	//   - Integer will have >=, >, ==, etc
 	//   - Boolean will have ==, etc
-	Operations() map[Operation]string
+	QueryOperators() map[QueryOperator]string
 
 	// ProvideModels is called to allow the field greater context to the
 	// rest of the models in order to setup things like relationships

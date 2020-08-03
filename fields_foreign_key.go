@@ -43,8 +43,8 @@ func (f ForeignKeyField) EmptyDefault() interface{} {
 	return f.settings.Rel.ToField.EmptyDefault()
 }
 
-func (f ForeignKeyField) Operations() map[Operation]string {
-	return f.settings.Rel.ToField.Operations()
+func (f ForeignKeyField) QueryOperators() map[QueryOperator]string {
+	return f.settings.Rel.ToField.QueryOperators()
 }
 
 func (f ForeignKeyField) ProvideModels(parent Model, models []Model) {
@@ -61,6 +61,10 @@ func (f ForeignKeyField) ProvideModels(parent Model, models []Model) {
 	}
 
 	toField := PrimaryKeyField(toModel)
+
+	if toField.Type() == Char {
+		f.settings.MaxLength = toField.Settings().MaxLength
+	}
 
 	f.settings.Rel = &Rel{
 		To:      toModel,

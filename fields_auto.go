@@ -25,8 +25,8 @@ func (f AutoField) EmptyDefault() interface{} {
 	return f.base.EmptyDefault()
 }
 
-func (f AutoField) Operations() map[Operation]string {
-	return f.base.Operations()
+func (f AutoField) QueryOperators() map[QueryOperator]string {
+	return f.base.QueryOperators()
 }
 
 func (f AutoField) Settings() FieldSettings {

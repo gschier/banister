@@ -31,8 +31,8 @@ func (f DateTimeField) EmptyDefault() interface{} {
 	return time.Time{}
 }
 
-func (f DateTimeField) Operations() map[Operation]string {
-	return map[Operation]string{
+func (f DateTimeField) QueryOperators() map[QueryOperator]string {
+	return map[QueryOperator]string{
 		Exact:    "Eq",
 		NotExact: "NotEq",
 		Lt:       "Before",

@@ -22,7 +22,7 @@ func (g *MigrationGenerator) AddMigrateFunc() {
 			case Auto:
 				fieldFn = "NewAutoField"
 			case Char:
-				// TODO
+				fieldFn = "NewCharField"
 			case DateTime:
 				fieldFn = "NewDateTimeField"
 			case Duration:
@@ -32,7 +32,7 @@ func (g *MigrationGenerator) AddMigrateFunc() {
 			case Text:
 				fieldFn = "NewTextField"
 			case TextArray:
-				// TODO
+				fieldFn = "NewTextArrayField"
 			case Float:
 				// TODO
 			case Boolean:
@@ -51,7 +51,7 @@ func (g *MigrationGenerator) AddMigrateFunc() {
 			fields = append(fields, fieldDef)
 		}
 
-		addModels = append(addModels, Id("NewModel").Call(
+		addModels = append(addModels, Qual("github.com/gschier/banister", "NewModel").Call(
 			fields...,
 		).Line())
 	}
@@ -62,6 +62,6 @@ func (g *MigrationGenerator) AddMigrateFunc() {
 }
 
 func (g *MigrationGenerator) Generate() {
-	g.File.ImportAlias("github.com/gschier/banister", ".")
+	g.File.ImportAlias("github.com/gschier/banister", "b")
 	g.AddMigrateFunc()
 }

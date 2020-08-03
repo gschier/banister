@@ -44,28 +44,34 @@ func (b *Backend) MigrationOperations() banister.DBOperations {
 	}
 }
 
-func (b *Backend) FilterOperations() map[banister.Operation]string {
-	return map[banister.Operation]string{
-		banister.Exact:       "= ?",
-		banister.NotExact:    "!= ?",
-		banister.IExact:      "LIKE ?",
-		banister.Contains:    "LIKE '%' || ? || '%'",
-		banister.IContains:   "ILIKE '%' || ? || '%'",
-		banister.Regex:       "~ ?",
-		banister.IRegex:      "~* ?",
-		banister.Gt:          "> ?",
-		banister.Gte:         ">= ?",
-		banister.Lt:          "< ?",
-		banister.Lte:         "<= ?",
-		banister.StartsWith:  "LIKE ? || '%'",
-		banister.IStartsWith: "ILIKE ? || '%'",
-		banister.EndsWith:    "LIKE '%' || ?",
-		banister.IEndsWith:   "ILIKE '%' || ?",
+func (b *Backend) Lookups() map[banister.QueryOperator]string {
+	return map[banister.QueryOperator]string{
+		banister.Exact:         "= ?",
+		banister.NotExact:      "!= ?",
+		banister.IExact:        "LIKE ?",
+		banister.Contains:      "LIKE '%' || ? || '%'",
+		banister.IContains:     "ILIKE '%' || ? || '%'",
+		banister.ArrayContains: "@> ?",
+		banister.Regex:         "~ ?",
+		banister.IRegex:        "~* ?",
+		banister.Gt:            "> ?",
+		banister.Gte:           ">= ?",
+		banister.Lt:            "< ?",
+		banister.Lte:           "<= ?",
+		banister.StartsWith:    "LIKE ? || '%'",
+		banister.IStartsWith:   "ILIKE ? || '%'",
+		banister.EndsWith:      "LIKE '%' || ?",
+		banister.IEndsWith:     "ILIKE '%' || ?",
 	}
 }
 
 func (b *Backend) DataTypeSuffixes() map[banister.FieldType]string {
 	return map[banister.FieldType]string{}
+}
+
+func (b *Backend) ReturnInsertColumnsSQL(m banister.Model) string {
+	pk := banister.PrimaryKeyField(m)
+	return "RETURNING " + b.QuoteName(pk.Settings().DBColumn)
 }
 
 func (b *Backend) ColumnSQL(f banister.Field, includeDefault bool) string {

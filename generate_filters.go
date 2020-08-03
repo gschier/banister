@@ -62,8 +62,8 @@ func (g *FilterGenerator) AddMethod(name string, args, block, returns []Code) {
 		Block(block...)
 }
 
-func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op Operation) {
-	exprStr, ok := __backend.FilterOperations()[op]
+func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op QueryOperator) {
+	exprStr, ok := __backend.Lookups()[op]
 	if !ok {
 		panic("Unsupported filter operation " + name)
 	}
@@ -77,8 +77,13 @@ func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op Operation
 		defineGoType = Id(segments[0])
 	}
 
+	valueDef := Id("v")
+	if f.Type() == TextArray {
+		valueDef = Qual("github.com/lib/pq", "Array").Call(valueDef)
+	}
+
 	Expr := Qual("github.com/Masterminds/squirrel", "Expr")
-	filterDef := Expr.Call(Lit(g.names(f).QualifiedColumn+" "+exprStr), Id("v"))
+	filterDef := Expr.Call(Lit(g.names(f).QualifiedColumn+" "+exprStr), valueDef)
 	g.AddFilterMethod(f, name, Id("v").Add(defineGoType), filterDef)
 
 	if op == Exact && f.Settings().Null {
@@ -137,7 +142,7 @@ func (g *FilterGenerator) AddFilterOptionsStruct() {
 }
 
 func (g *FilterGenerator) AddOperationFilters(f Field) {
-	for op, name := range f.Operations() {
+	for op, name := range f.QueryOperators() {
 		g.AddFilterExprMethod(f, name, op)
 	}
 }

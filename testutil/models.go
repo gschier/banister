@@ -1,10 +1,6 @@
 package testutil
 
-import (
-	"github.com/gschier/banister"
-)
-
-type TestUser struct{}
+import "github.com/gschier/banister"
 
 func TestUserModel() banister.Model {
 	return banister.NewModel("User",

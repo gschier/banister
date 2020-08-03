@@ -47,7 +47,7 @@ func (g *OrderBysGenerator) AddConstructor() {
 		}
 		desc := Dict{
 			Id("field"): Lit(f.Settings().Names(g.Model).QualifiedColumn),
-			Id("order"): Lit("ASC"),
+			Id("order"): Lit("DESC"),
 			Id("join"):  Lit(""),
 		}
 		values[Id(f.Settings().Name)] = Id(f.Settings().Names(g.Model).QuerysetOrderByDirectionStruct).Values(Dict{

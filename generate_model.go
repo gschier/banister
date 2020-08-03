@@ -91,6 +91,8 @@ func (g *ModelGenerator) AddConstructor() {
 			defaultValue = Qual("time", "Time").Values()
 		case time.Duration:
 			defaultValue = Qual("time", "Duration").Call()
+		case []string:
+			defaultValue = Make(Index().String(), Lit(0))
 		default:
 			defaultValue = Lit(v)
 		}

@@ -42,25 +42,12 @@ func (b *Backend) DataTypeSuffixes() map[banister.FieldType]string {
 	}
 }
 
-func (b *Backend) ColumnSQL(f banister.Field, includeDefault bool) string {
-	return banister.BuildColumnSQL(b, f, includeDefault)
+func (b *Backend) ReturnInsertColumnsSQL(m banister.Model) string {
+	return ""
 }
 
-func (b *Backend) TableSQL(m banister.Model) string {
-	return banister.BuildTableSQL(b, m)
-}
-
-func (b *Backend) MigrationOperations() banister.DBOperations {
-	return banister.DBOperations{
-		CreateTable:  "CREATE TABLE __TABLE__ ( __DEFINITION__ )",
-		CreateColumn: "ALTER TABLE __TABLE__ ADD COLUMN __COLUMN__ __DEFINITION__",
-		CreateIndex:  "CREATE INDEX __NAME__ ON __TABLE__ (__COLUMN__)__INCLUDE____EXTRA____CONDITION__",
-		CreateFK:     "FOREIGN KEY (__COLUMN__) REFERENCES __TO_TABLE__ (__TO_COLUMN__)__ON_DELETE__",
-	}
-}
-
-func (b *Backend) FilterOperations() map[banister.Operation]string {
-	return map[banister.Operation]string{
+func (b *Backend) Lookups() map[banister.QueryOperator]string {
+	return map[banister.QueryOperator]string{
 		banister.Exact:       "= ?",
 		banister.NotExact:    "!= ?",
 		banister.IExact:      `LIKE ? ESCAPE '\'`,
@@ -76,6 +63,23 @@ func (b *Backend) FilterOperations() map[banister.Operation]string {
 		banister.IStartsWith: `ILIKE ? || '%' ESCAPE '\'`,
 		banister.EndsWith:    `LIKE '%' || ? ESCAPE '\'`,
 		banister.IEndsWith:   `ILIKE '%' || ? ESCAPE '\'`,
+	}
+}
+
+func (b *Backend) ColumnSQL(f banister.Field, includeDefault bool) string {
+	return banister.BuildColumnSQL(b, f, includeDefault)
+}
+
+func (b *Backend) TableSQL(m banister.Model) string {
+	return banister.BuildTableSQL(b, m)
+}
+
+func (b *Backend) MigrationOperations() banister.DBOperations {
+	return banister.DBOperations{
+		CreateTable:  "CREATE TABLE __TABLE__ ( __DEFINITION__ )",
+		CreateColumn: "ALTER TABLE __TABLE__ ADD COLUMN __COLUMN__ __DEFINITION__",
+		CreateIndex:  "CREATE INDEX __NAME__ ON __TABLE__ (__COLUMN__)__INCLUDE____EXTRA____CONDITION__",
+		CreateFK:     "FOREIGN KEY (__COLUMN__) REFERENCES __TO_TABLE__ (__TO_COLUMN__)__ON_DELETE__",
 	}
 }
 

@@ -285,7 +285,12 @@ func (g *QuerysetGenerator) AddDeleteMethod() {
 func (g *QuerysetGenerator) AddScanMethod() {
 	fields := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
-		fields = append(fields, Op("&").Id("m").Dot(f.Settings().Name))
+		switch f.Type() {
+		case TextArray:
+			fields = append(fields, Line().Qual("github.com/lib/pq", "Array").Call(Op("&").Id("m").Dot(f.Settings().Name)))
+		default:
+			fields = append(fields, Line().Op("&").Id("m").Dot(f.Settings().Name))
+		}
 	}
 
 	g.AddMethod("scan",

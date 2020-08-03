@@ -29,8 +29,8 @@ func (f IntegerField) EmptyDefault() interface{} {
 	return int64(0)
 }
 
-func (f IntegerField) Operations() map[Operation]string {
-	return map[Operation]string{
+func (f IntegerField) QueryOperators() map[QueryOperator]string {
+	return map[QueryOperator]string{
 		Exact:    "Eq",
 		NotExact: "NotEq",
 		Lt:       "Lt",

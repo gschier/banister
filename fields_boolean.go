@@ -29,8 +29,8 @@ func (f BooleanField) EmptyDefault() interface{} {
 	return false
 }
 
-func (f BooleanField) Operations() map[Operation]string {
-	return map[Operation]string{
+func (f BooleanField) QueryOperators() map[QueryOperator]string {
+	return map[QueryOperator]string{
 		Exact:    "Eq",
 		NotExact: "NotEq",
 	}

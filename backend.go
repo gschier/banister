@@ -4,9 +4,10 @@ type Backend interface {
 	DriverName() string
 	DisplayName() string
 	MigrationOperations() DBOperations
-	FilterOperations() map[Operation]string
+	Lookups() map[QueryOperator]string
 	DataTypes() map[FieldType]string
 	DataTypeSuffixes() map[FieldType]string
+	ReturnInsertColumnsSQL(m Model) string
 	ColumnSQL(f Field, includeDefault bool) string
 	TableSQL(m Model) string
 	ConstraintSQL(m Model) string

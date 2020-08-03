@@ -120,6 +120,15 @@ func (g *ManagerGenerator) AddAllMethod() {
 	)
 }
 
+func (g *ManagerGenerator) AddNoneMethod() {
+	g.AddMethodWithPanicVariant("None",
+		[]Code{},
+		[]Code{},
+		[]Code{Return(Make(Index().Id(g.names().ModelStruct), Lit(0)), Nil())},
+		[]Code{Index().Id(g.names().ModelStruct), Error()},
+	)
+}
+
 func (g *ManagerGenerator) AddInsertMethod() {
 	createInstance := Id("m").Op(":=").Id("mgr").Dot("newModel").Call(Id("set").Op("..."))
 	insert := Err().Op(":=").Id("mgr").Dot("insertInstance").Call(Id("m"))
@@ -153,8 +162,13 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 		if f.Type() == Auto {
 			continue // Skip auto-created fields
 		}
-		columns = append(columns, Lit(f.Settings().DBColumn))
-		values = append(values, Op("m").Dot(f.Settings().Name))
+		columns = append(columns, Line().Lit(f.Settings().DBColumn))
+		if f.Type() == TextArray {
+			arr := Line().Qual("github.com/lib/pq", "Array")
+			values = append(values, arr.Call(Op("m").Dot(f.Settings().Name)))
+		} else {
+			values = append(values, Line().Op("m").Dot(f.Settings().Name))
+		}
 	}
 
 	insert := Id("query").Op(":=").Qual("github.com/Masterminds/squirrel", "Insert")
@@ -164,29 +178,43 @@ func (g *ManagerGenerator) AddInsertInstanceMethod() {
 	addValues := Id("query").Op("=").Id("query").Dot("Values").Call(values...)
 	toSQL := Id("q").Op(",").Id("args").Op(":=").Id("mgr").Dot("toSQL").Call(Id("query"))
 
-	exec := Id("result").Op(",").Err().Op(":=").
-		Id("mgr").Dot("db").Dot("Exec").Call(Id("q"), Id("args").Op("..."))
+	returningSQL := __backend.ReturnInsertColumnsSQL(g.Model)
+	addReturning := Id("query").Op("=").Id("query").Dot("Suffix").Call(Lit(returningSQL))
+
+	queryRow := Id("result").Op(":=").
+		Id("mgr").Dot("db").Dot("QueryRow").Call(Id("q"), Id("args").Op("..."))
+
+	lastInsertId := Var().Id("id").Id(fmt.Sprintf("%T", PrimaryKeyField(g.Model).EmptyDefault()))
+	scanRow := Err().Op(":=").Id("result").Dot("Scan").Call(Op("&").Id("id"))
 
 	checkErr := If(Err().Op("!=").Nil()).Block(Return(Err()))
 
-	lastInsertId := Id("id").Op(",").Err().Op(":=").Id("result").Dot("LastInsertId").Call()
-
 	assignPK := Comment("Update PK on model").Line().
 		Id("m").Dot(PrimaryKeyField(g.Model).Settings().Name).Op("=").Id("id")
+	//if PrimaryKeyField(g.Model).Type() != Auto {
+	//	assignPK = Comment("Not auto, so don't assign LastInsertID to PK").Line().
+	//		Comment(assignPK.GoString()).Line().
+	//		Op("_").Op("=").Id("id")
+	//} else {
+	//}
 
 	g.AddMethod("insertInstance",
 		[]Code{Id("m").Op("*").Id(g.names().ModelStruct)},
 		[]Code{
 			g.MaybeCallHook(globalNames.HookPreInsert).Line(),
 			defineQuery,
-			addColumns,
+			addColumns.Line(),
 			addValues.Line(),
+			addReturning.Line(),
 			toSQL.Line(),
-			exec,
-			checkErr.Line(),
+			queryRow.Line(),
 			lastInsertId,
+			scanRow,
 			checkErr.Line(),
 			assignPK.Line(),
+			//lastInsertId,
+			//checkErr.Line(),
+			//assignPK.Line(),
 			g.MaybeCallHook(globalNames.HookPostInsert).Line(),
 			Return(Nil()),
 		},
@@ -198,13 +226,16 @@ func (g *ManagerGenerator) AddUpdateMethod() {
 	checkErr := If(Err().Op("!=").Nil()).Block(Return(Err()))
 	setters := make([]Code, 0)
 	for _, f := range g.Model.Fields() {
-		// TODO: Maybe don't update primary key? Should see what Django
-		//   does here.
-		setter := Id(g.names().QuerysetSetterArgStruct).Values(Dict{
+		valueDef := Id("m").Dot(f.Settings().Name)
+
+		if f.Type() == TextArray {
+			valueDef = Qual("github.com/lib/pq", "Array").Call(valueDef)
+		}
+
+		setters = append(setters, Id(g.names().QuerysetSetterArgStruct).Values(Dict{
 			Id("field"): Lit(f.Settings().DBColumn),
-			Id("value"): Id("m").Dot(f.Settings().Name),
-		})
-		setters = append(setters, setter)
+			Id("value"): valueDef,
+		}))
 	}
 
 	pkSettings := PrimaryKeyField(g.Model).Settings()
@@ -261,11 +292,15 @@ func (g *ManagerGenerator) AddToSQLMethod() {
 		Panic(Err()),
 	)
 
+	replacePlaceholders := Id("query").Op(",").Err().Op("=").Qual("github.com/Masterminds/squirrel", "Dollar").Dot("ReplacePlaceholders").Call(Id("query"))
+
 	g.AddMethod("toSQL",
 		[]Code{Id("q").Qual("github.com/Masterminds/squirrel", "Sqlizer")},
 		[]Code{
 			genSQL,
-			maybePanic,
+			maybePanic.Line(),
+			replacePlaceholders,
+			maybePanic.Line(),
 			Return(Id("query"), Id("args")),
 		},
 		[]Code{
@@ -385,6 +420,7 @@ func (g *ManagerGenerator) Generate() {
 	g.AddInsertInstanceMethod()
 	g.AddUpdateMethod()
 	g.AddAllMethod()
+	g.AddNoneMethod()
 	g.AddGetMethod()
 	g.AddNewModelMethod()
 	g.AddToSQLMethod()

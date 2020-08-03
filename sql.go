@@ -64,8 +64,8 @@ func BuildColumnSQL(b Backend, f Field, includeDefault bool) string {
 	}
 
 	if strings.Contains(columnSQL, "__MAX_LENGTH__") {
-		if f.Settings().MaxLength != nil {
-			panic("Field " + settings.Name + "requires max length to be set")
+		if f.Settings().MaxLength == nil {
+			panic("Field " + settings.Name + " requires max length to be set")
 		}
 		columnSQL = strings.ReplaceAll(columnSQL, "__MAX_LENGTH__", fmt.Sprintf("%d", *settings.MaxLength))
 	}

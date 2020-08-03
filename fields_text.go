@@ -29,8 +29,8 @@ func (f TextField) EmptyDefault() interface{} {
 	return ""
 }
 
-func (f TextField) Operations() map[Operation]string {
-	return map[Operation]string{
+func (f TextField) QueryOperators() map[QueryOperator]string {
+	return map[QueryOperator]string{
 		Exact:       "Eq",
 		IExact:      "ILike",
 		NotExact:    "NotEq",
@@ -59,6 +59,10 @@ type TextFieldBuilder struct {
 }
 
 func (f *TextFieldBuilder) Build() Field {
+	return f.build()
+}
+
+func (f *TextFieldBuilder) build() TextField {
 	f.field.settings.Fix()
 	return *f.field
 }
