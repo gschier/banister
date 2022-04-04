@@ -43,7 +43,8 @@ func (b *Backend) DataTypeSuffixes() map[banister.FieldType]string {
 }
 
 func (b *Backend) ReturnInsertColumnsSQL(m banister.Model) string {
-	return ""
+	pk := banister.PrimaryKeyField(m)
+	return "RETURNING " + b.QuoteName(pk.Settings().DBColumn)
 }
 
 func (b *Backend) Lookups() map[banister.QueryOperator]string {

@@ -15,7 +15,7 @@ func TestGenerate(t *testing.T) {
 	}
 
 	for _, m := range models {
-		m.ProvideModels(models)
+		m.ProvideModels(models...)
 	}
 
 	src := GenerateToString(&GenerateConfig{

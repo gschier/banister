@@ -8,7 +8,7 @@ func NewAutoField(name string) *AutoFieldBuilder {
 	}
 }
 
-// IntegerField is a database field used for integers
+// AutoField is a database field used for integers
 type AutoField struct {
 	base *IntegerField
 }
@@ -37,7 +37,6 @@ func (f AutoField) ProvideModels(_ Model, _ []Model) {
 	// Nothing yet
 }
 
-// AutoFieldBuilder
 type AutoFieldBuilder struct {
 	field *AutoField
 }

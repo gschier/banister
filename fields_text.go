@@ -53,7 +53,6 @@ func (f TextField) ProvideModels(_ Model, _ []Model) {
 	// Nothing yet
 }
 
-// TextFieldBuilder
 type TextFieldBuilder struct {
 	field *TextField
 }
@@ -79,5 +78,10 @@ func (f *TextFieldBuilder) Null() *TextFieldBuilder {
 
 func (f *TextFieldBuilder) Unique() *TextFieldBuilder {
 	f.field.settings.Unique = true
+	return f
+}
+
+func (f *TextFieldBuilder) PrimaryKey() *TextFieldBuilder {
+	f.field.settings.PrimaryKey = true
 	return f
 }

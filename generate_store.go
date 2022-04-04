@@ -24,7 +24,7 @@ func (g *StoreGenerator) AddStruct() {
 	g.File.Comment(globalNames.StoreStruct + " defines a data store")
 	g.File.Type().Id(globalNames.StoreStruct).Struct(
 		append([]Code{
-			Id("db").Op("*").Qual("database/sql", "DB"),
+			Id("DB").Op("*").Qual("database/sql", "DB"),
 			Id("config").Id(globalNames.StoreConfigStruct),
 			Line().Comment("model managers").Line(),
 		}, modelConfigs...)...,
@@ -33,7 +33,7 @@ func (g *StoreGenerator) AddStruct() {
 
 func (g *StoreGenerator) AddConstructor() {
 	values := Dict{
-		Id("db"):     Id("db"),
+		Id("DB"):     Id("db"),
 		Id("config"): Id("c"),
 	}
 

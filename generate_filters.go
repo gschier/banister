@@ -3,6 +3,7 @@ package banister
 import (
 	"fmt"
 	. "github.com/dave/jennifer/jen"
+	"log"
 	"strings"
 )
 
@@ -65,7 +66,11 @@ func (g *FilterGenerator) AddMethod(name string, args, block, returns []Code) {
 func (g *FilterGenerator) AddFilterExprMethod(f Field, name string, op QueryOperator) {
 	exprStr, ok := __backend.Lookups()[op]
 	if !ok {
-		panic("Unsupported filter operation " + name)
+		keys := make([]string, 0)
+		for op := range __backend.Lookups() {
+			keys = append(keys, string(op))
+		}
+		log.Panicf("Unsupported filter operation %s. Found %s\n", op, strings.Join(keys, ", "))
 	}
 
 	// If type comes from package, we need to qualify it

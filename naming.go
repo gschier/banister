@@ -65,7 +65,7 @@ func NamesForModel(modelName string) GeneratedModelNames {
 		ManagerAccessor:     PublicGoName(modelName + "s"),
 		ManagerStruct:       PrivateGoName(modelName + "Manager"),
 		ManagerConstructor:  PrivateGoName("New" + modelName + "Manager"),
-		QuerysetStruct:      PrivateGoName(modelName + "Queryset"),
+		QuerysetStruct:      PublicGoName(modelName + "Queryset"),
 		QuerysetConstructor: PrivateGoName("New" + modelName + "Queryset"),
 
 		ModelStruct:      PublicGoName(modelName),

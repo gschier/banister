@@ -10,15 +10,22 @@ import (
 
 func TestBuildTableSQL(t *testing.T) {
 	t.Run("builds simple table", func(t *testing.T) {
-		s := BuildTableSQL(GetBackend("postgres"), testutil.TestUserModel())
-		r.Equal(t, "CREATE TABLE users ( "+
+		model := testutil.TestPostModel()
+		model.ProvideModels(testutil.TestUserModel())
+		s := BuildTableSQL(GetBackend("postgres"), model)
+		r.Equal(t, "CREATE TABLE posts ( "+
 			"id SERIAL PRIMARY KEY, "+
-			"age INTEGER, "+
-			"admin BOOLEAN NOT NULL, "+
-			"name TEXT NOT NULL, "+
-			"username TEXT NOT NULL UNIQUE, "+
+			"user_id INTEGER NOT NULL, "+
+			"score INTEGER DEFAULT 50, "+
+			"title TEXT DEFAULT 'Change Me' NOT NULL, "+
+			"slug TEXT NOT NULL UNIQUE, "+
+			"subtitle TEXT, "+
+			"content TEXT DEFAULT 'Fill ''this'' \"in\"' NOT NULL, "+
 			"created TIMESTAMP WITH TIME ZONE NOT NULL, "+
-			"bio TEXT DEFAULT 'Fill me in' NOT NULL "+
+			"deleted BOOLEAN NOT NULL, "+
+			"approved BOOLEAN, "+
+			"private BOOLEAN DEFAULT TRUE NOT NULL, "+
+			"FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE "+
 			");", s)
 	})
 }

@@ -34,7 +34,7 @@ func (s *ModelSettings) FillDefaults() {
 type Model interface {
 	Settings() ModelSettings
 	Fields() []Field
-	ProvideModels([]Model)
+	ProvideModels(models ...Model)
 }
 
 type model struct {
@@ -65,7 +65,7 @@ func (m model) Settings() ModelSettings {
 
 // ProvideModels gives the model an opportunity to setup things that may
 // require knowledge of the rest of the models
-func (m model) ProvideModels(models []Model) {
+func (m model) ProvideModels(models ...Model) {
 	for _, f := range m.fields {
 		f.ProvideModels(m, models)
 	}

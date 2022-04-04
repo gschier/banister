@@ -9,6 +9,7 @@ func NewForeignKeyField(to string) *ForeignKeyFieldBuilder {
 			settings: &FieldSettings{
 				Name:      PublicGoName(to + "ID"),
 				ManyToOne: true,
+				Rel:       &Rel{},
 			},
 		},
 	}
@@ -66,15 +67,12 @@ func (f ForeignKeyField) ProvideModels(parent Model, models []Model) {
 		f.settings.MaxLength = toField.Settings().MaxLength
 	}
 
-	f.settings.Rel = &Rel{
-		To:      toModel,
-		ToField: toField,
+	f.settings.Rel.To = toModel
+	f.settings.Rel.ToField = toField
+	f.settings.Rel.RelatedName = parent.Settings().PluralName()
 
-		// TODO: Handle these
-		RelatedName:      parent.Settings().PluralName(),
-		RelatedQueryName: "",
-		OnDelete:         "",
-	}
+	// TODO: Handle these
+	//	f.settings.Rel.RelatedQueryName= ""
 }
 
 // ForeignKeyFieldBuilder
@@ -91,3 +89,28 @@ func (f *ForeignKeyFieldBuilder) Null() *ForeignKeyFieldBuilder {
 	f.field.settings.Null = true
 	return f
 }
+
+func (f *ForeignKeyFieldBuilder) OnDelete(option OnDeleteOption) *ForeignKeyFieldBuilder {
+	f.field.settings.Rel.OnDelete = option.OnDeleteValue()
+	return f
+}
+
+type OnDeleteOption interface {
+	OnDeleteValue() string
+}
+
+type onDeleteValue struct {
+	value string
+}
+
+func (d onDeleteValue) OnDeleteValue() string {
+	return d.value
+}
+
+var (
+	OnDeleteSetNull    = onDeleteValue{value: "SET NULL"}
+	OnDeleteSetDefault = onDeleteValue{value: "SET DEFAULT"}
+	OnDeleteRestrict   = onDeleteValue{value: "RESTRICT"}
+	OnDeleteNoAction   = onDeleteValue{value: "NO ACTION"}
+	OnDeleteCascade    = onDeleteValue{value: "CASCADE"}
+)

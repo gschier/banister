@@ -50,7 +50,7 @@ func generateJen(c *GenerateConfig) map[string]*jen.File {
 
 	// Initialize models
 	for _, m := range c.Models {
-		m.ProvideModels(c.Models)
+		m.ProvideModels(c.Models...)
 	}
 
 	files := make(map[string]*jen.File)

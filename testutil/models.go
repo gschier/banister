@@ -17,7 +17,7 @@ func TestUserModel() banister.Model {
 func TestPostModel() banister.Model {
 	return banister.NewModel("Post",
 		banister.NewAutoField("id"),
-		banister.NewForeignKeyField("User"),
+		banister.NewForeignKeyField("User").OnDelete(banister.OnDeleteCascade),
 		banister.NewIntegerField("score").Null().Default(50),
 		banister.NewTextField("title").Default("Change Me"),
 		banister.NewTextField("slug").Unique(),

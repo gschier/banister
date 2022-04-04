@@ -174,14 +174,13 @@ func createStore(t *testing.T) (*Store, *User) {
 	// NOTE: Hack to initialize models, which will not be necessary once we
 	//   have generated migrations
 	for _, m := range models {
-		m.ProvideModels(models)
+		m.ProvideModels(models...)
 	}
 
 	backend := banister.GetBackend("sqlite3")
 	sqlStr := "" +
 		banister.BuildTableSQL(backend, models[0]) + "\n" +
 		banister.BuildTableSQL(backend, models[1])
-	//println(sqlStr)
 
 	_, err = db.Exec(sqlStr)
 	r.Nil(t, err, "tables should be created")
