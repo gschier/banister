@@ -26,7 +26,7 @@ func (g *ManagerGenerator) AddMethodWithPanicVariant(name string, args, panicArg
 	// returning an error
 
 	var (
-		panicVariantName          = name + "P"
+		panicVariantName          = "Must" + name
 		callOriginalAndMaybePanic []Code
 		panicVariantReturns       []Code
 	)

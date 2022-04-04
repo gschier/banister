@@ -15,15 +15,15 @@ import (
 func TestIntegrate(t *testing.T) {
 	t.Run("Inserts a record", func(t *testing.T) {
 		store, _ := createStore(t)
-		user := store.Users.InsertP(Set.User.Username("another"))
+		user := store.Users.MustInsert(Set.User.Username("another"))
 		r.Equal(t, "another", user.Username)
 		r.Equal(t, "another", user.Name, "hook should have worked")
 	})
 
 	t.Run("Filters and returns results", func(t *testing.T) {
 		store, _ := createStore(t)
-		store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
-		store.Users.InsertP(Set.User.Username("adult"), Set.User.Age(28))
+		store.Users.MustInsert(Set.User.Username("kid"), Set.User.Age(11))
+		store.Users.MustInsert(Set.User.Username("adult"), Set.User.Age(28))
 
 		users := store.Users.
 			Filter(Where.User.Age.Gt(100)).
@@ -37,29 +37,29 @@ func TestIntegrate(t *testing.T) {
 			AllP()
 		r.Equal(t, 2, len(users))
 
-		users = store.Users.AllP()
+		users = store.Users.MustAll()
 		r.Equal(t, 4, len(users))
 	})
 
 	t.Run("Get and One", func(t *testing.T) {
 		store, _ := createStore(t)
-		kid := store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
-		store.Users.InsertP(Set.User.Username("adult"), Set.User.Age(28))
+		kid := store.Users.MustInsert(Set.User.Username("kid"), Set.User.Age(11))
+		store.Users.MustInsert(Set.User.Username("adult"), Set.User.Age(28))
 
 		user := store.Users.
 			Filter(Where.User.Username.Eq("kid")).
 			OneP()
 		r.Equal(t, kid, user)
 
-		user = store.Users.GetP(kid.ID)
+		user = store.Users.MustGet(kid.ID)
 		r.Equal(t, kid, user)
 	})
 
 	t.Run("Or's and And's", func(t *testing.T) {
 		store, _ := createStore(t)
-		store.Users.InsertP(Set.User.Username("kid"), Set.User.Age(11))
-		store.Users.InsertP(Set.User.Username("admin"), Set.User.Admin(true))
-		store.Users.InsertP(Set.User.Username("senior"), Set.User.Age(95))
+		store.Users.MustInsert(Set.User.Username("kid"), Set.User.Age(11))
+		store.Users.MustInsert(Set.User.Username("admin"), Set.User.Admin(true))
+		store.Users.MustInsert(Set.User.Username("senior"), Set.User.Age(95))
 
 		users := store.Users.Filter(
 			Where.User.Or(
@@ -76,9 +76,9 @@ func TestIntegrate(t *testing.T) {
 
 	t.Run("Deletes results", func(t *testing.T) {
 		store, _ := createStore(t)
-		user := store.Users.InsertP(Set.User.Username("foo"), Set.User.Age(11))
+		user := store.Users.MustInsert(Set.User.Username("foo"), Set.User.Age(11))
 
-		store.Users.DeleteP(user)
+		store.Users.MustDelete(user)
 
 		users := store.Users.Filter(Where.User.Username.Eq("foo")).AllP()
 		r.Equal(t, 0, len(users))
@@ -88,9 +88,9 @@ func TestIntegrate(t *testing.T) {
 		store, user := createStore(t)
 
 		user.Name = "Baby"
-		store.Users.UpdateP(user)
+		store.Users.MustUpdate(user)
 
-		users := store.Users.AllP()
+		users := store.Users.MustAll()
 		r.Equal(t, 2, len(users))
 		r.Equal(t, "Baby", user.Name)
 		r.Equal(t, "Baby", users[0].Name, "should have updated in DB")
@@ -106,7 +106,7 @@ func TestIntegrate(t *testing.T) {
 			Set.User.Admin(true),
 		)
 
-		users := store.Users.AllP()
+		users := store.Users.MustAll()
 		r.Equal(t, "bobby", users[0].Username)
 		r.Equal(t, true, users[0].Admin)
 		r.Nil(t, users[0].Age)
@@ -118,14 +118,14 @@ func TestIntegrate(t *testing.T) {
 	t.Run("Bulk delete", func(t *testing.T) {
 		store, _ := createStore(t)
 		store.Users.Filter(Where.User.Username.Eq("bobby")).DeleteP()
-		users := store.Users.AllP()
+		users := store.Users.MustAll()
 		r.Equal(t, 1, len(users))
 		r.Equal(t, "tammy", users[0].Username)
 	})
 
 	t.Run("Nullable fields with defaults work", func(t *testing.T) {
 		store, user := createStore(t)
-		p := store.Posts.InsertP(Set.Post.UserID(user.ID))
+		p := store.Posts.MustInsert(Set.Post.UserID(user.ID))
 		r.Equal(t, int64(50), *p.Score)
 	})
 
@@ -195,9 +195,9 @@ func createStore(t *testing.T) (*Store, *User) {
 		},
 	})
 
-	user1 := store.Users.InsertP(Set.User.Username("bobby"), Set.User.Age(11))
+	user1 := store.Users.MustInsert(Set.User.Username("bobby"), Set.User.Age(11))
 	assert.EqualValues(t, user1.ID, 1)
-	user2 := store.Users.InsertP(Set.User.Username("tammy"), Set.User.Age(21))
+	user2 := store.Users.MustInsert(Set.User.Username("tammy"), Set.User.Age(21))
 	assert.EqualValues(t, user2.ID, 2)
 
 	return store, user1
